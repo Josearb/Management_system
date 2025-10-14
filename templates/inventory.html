@@ -11,6 +11,18 @@
             <input type="text" name="name" placeholder="Nombre" required>
             <input type="number" name="quantity" placeholder="Cantidad" required>
             <input type="number" step="0.01" name="price" placeholder="Precio" required>
+            <select name="unit_measure" required>
+                <option value="">Seleccionar unidad</option>
+                <option value="unidades">Unidades</option>
+                <option value="kg">Kilogramos (kg)</option>
+                <option value="g">Gramos (g)</option>
+                <option value="litros">Litros (L)</option>
+                <option value="cajas">Cajas</option>
+                <option value="paquetes">Paquetes</option>
+                <option value="botellas">Botellas</option>
+                <option value="sobres">Sobres</option>
+                <option value="bolsas">Bolsas</option>
+            </select>
             <button type="submit" class="btn-primary">Añadir</button>
         </form>
     {% endif %}
@@ -19,9 +31,10 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>ID</th>
+                <th>Código de Inventario</th>
                 <th>Nombre</th>
                 <th>Cantidad</th>
+                <th>Unidad de Medida</th>
                 <th>Precio</th>
                 <th>Acciones</th>
             </tr>
@@ -32,23 +45,43 @@
                 <td>{{ product.id }}</td>
                 <td>{{ product.name }}</td>
                 <td>{{ product.quantity }}</td>
+                <td>{{ product.unit_measure }}</td>
                 <td>${{ product.price }}</td>
                 <td>
-                    {% if session['role'] == 'admin' %}  <!-- Solo muestra botones si es admin -->
+                    {% if session['role'] == 'admin' %}
                         <form action="{{ url_for('update_product', product_id=product.id) }}" method="post" class="inline-form">
                             <input type="text" name="name" value="{{ product.name }}" required>
                             <input type="number" name="quantity" value="{{ product.quantity }}" required>
                             <input type="number" step="0.01" name="price" value="{{ product.price }}" required>
+                            <select name="unit_measure" required>
+                                <option value="unidades" {% if product.unit_measure == 'unidades' %}selected{% endif %}>Unidades</option>
+                                <option value="kg" {% if product.unit_measure == 'kg' %}selected{% endif %}>Kilogramos (kg)</option>
+                                <option value="g" {% if product.unit_measure == 'g' %}selected{% endif %}>Gramos (g)</option>
+                                <option value="litros" {% if product.unit_measure == 'litros' %}selected{% endif %}>Litros (L)</option>
+                                <option value="ml" {% if product.unit_measure == 'ml' %}selected{% endif %}>Mililitros (ml)</option>
+                                <option value="cajas" {% if product.unit_measure == 'cajas' %}selected{% endif %}>Cajas</option>
+                                <option value="paquetes" {% if product.unit_measure == 'paquetes' %}selected{% endif %}>Paquetes</option>
+                                <option value="metros" {% if product.unit_measure == 'metros' %}selected{% endif %}>Metros (m)</option>
+                                <option value="centimetros" {% if product.unit_measure == 'centimetros' %}selected{% endif %}>Centímetros (cm)</option>
+                            </select>
                             <button type="submit" class="btn-small">Actualizar</button>
                         </form>
                         <a href="{{ url_for('delete_product', product_id=product.id) }}" class="btn-small btn-danger">Eliminar</a>
                     {% else %}
-                        <span class="text-muted">Solo lectura</span>  <!-- Mensaje para dependientes -->
+                        <span class="text-muted">Solo lectura</span>
                     {% endif %}
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    <div class="actions" style="margin-top: 30px;">
+        <a href="{{ url_for('print_inventory_report') }}" class="btn btn-secondary" target="_blank">
+            Generar Reporte
+        </a>
+        <a href="{{ url_for('download_inventory_pdf') }}" class="btn btn-info">
+            📥 Descargar PDF
+        </a>
+    </div>
 </div>
 {% endblock %}

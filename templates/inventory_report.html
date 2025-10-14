@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Inventario{% endblock %}
+
+{% block content %}
+<div class="module-container">
+    <h2>📄 Reporte de Inventario - {{ date }}</h2>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Código de Inventario</th>
+                <th>Producto</th>
+                <th>Cantidad en Stock</th>
+                <th>Unidad de Medida</th>
+                <th>Precio Unitario</th>
+                <th>Valor Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.quantity }}</td>
+                <td>{{ product.unit_measure }}</td>
+                <td>${{ "%.2f"|format(product.price) }}</td>
+                <td>${{ "%.2f"|format(product.price * product.quantity) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" style="text-align: right;"><strong>Total de Productos:</strong></td>
+                <td><strong>{{ total_products }}</strong></td>
+                <td style="text-align: right;"><strong>Valor Total del Inventario:</strong></td>
+                <td><strong>${{ "%.2f"|format(total_value) }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="no-print" style="margin-top: 20px;">
+        <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir</button>
+        <a href="{{ url_for('download_inventory_pdf') }}" class="btn btn-info">📥 Descargar PDF</a>
+        <a href="{{ url_for('inventory') }}" class="btn btn-secondary">← Volver a Inventario</a>
+    </div>
+</div>
+
+<style>
+@media print {
+    .no-print { display: none; }
+    body { font-family: Arial, sans-serif; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+}
+</style>
+{% endblock %}

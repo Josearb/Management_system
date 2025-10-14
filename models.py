@@ -12,7 +12,8 @@ class User(db.Model):
     role = db.Column(db.String(20), nullable=False)
     
     def set_password(self, password):
-        self.password = generate_password_hash(password)
+        self.password = generate_password_hash(password, method="pbkdf2:sha256")
+    
     
     def check_password(self, password):
         return check_password_hash(self.password, password)
@@ -24,6 +25,7 @@ class Product(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Float, nullable=False)
     daily_sales = db.Column(db.Integer, default=0)
+    unit_measure = db.Column(db.String(20), nullable=False, default='unidades')
     
     def actual_sales_today(self):
         return sum(sale.quantity for sale in self.product_sales if  # Cambiado a product_sales
@@ -76,8 +78,11 @@ class MaintenanceTask(db.Model):
 def init_db(app):
     with app.app_context():
         db.create_all()
-        if not User.query.filter_by(username='admin').first():
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
             admin = User(username='admin', role='admin')
             admin.set_password('admin123')
             db.session.add(admin)
-            db.session.commit()
+        db.session.commit()
+
+
