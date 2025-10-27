@@ -6,7 +6,7 @@
     <h2>Módulo de Mantenimiento</h2>
     
     <div class="actions">
-        <form action="{{ url_for('maintenance') }}" method="post" class="inline-form">
+        <form action="{{ url_for('maintenance.maintenance') }}" method="post" class="inline-form">
             <input type="text" name="equipment" placeholder="Equipo" required>
             <textarea name="description" placeholder="Descripción" required></textarea>
             <select name="priority" required>
@@ -45,7 +45,7 @@
                 <td>{{ task.assigned_to }}</td>
                 <td>{{ task.due_date }}</td>
                 <td>
-                    <form action="{{ url_for('update_task', task_id=task.id) }}" method="post" class="inline-form">
+                    <form action="{{ url_for('maintenance.update_task', task_id=task.id) }}" method="post" class="inline-form">
                         <input type="text" name="equipment" value="{{ task.equipment }}" required>
                         <textarea name="description" required>{{ task.description }}</textarea>
                         <select name="priority" required>
@@ -62,8 +62,8 @@
                         <input type="date" name="due_date" value="{{ task.due_date }}" required>
                         <button type="submit" class="btn-small">Actualizar</button>
                     </form>
-                    <a href="{{ url_for('complete_task', task_id=task.id) }}" class="btn-small btn-success">Completar</a>
-                    <a href="{{ url_for('delete_task', task_id=task.id) }}" class="btn-small btn-danger">Eliminar</a>
+                    <a href="{{ url_for('maintenance.complete_task', task_id=task.id) }}" class="btn-small btn-success">Completar</a>
+                    <a href="{{ url_for('maintenance.delete_task', task_id=task.id) }}" class="btn-small btn-danger">Eliminar</a>
                 </td>
             </tr>
             {% endfor %}

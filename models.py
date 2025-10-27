@@ -14,7 +14,6 @@ class User(db.Model):
     def set_password(self, password):
         self.password = generate_password_hash(password, method="pbkdf2:sha256")
     
-    
     def check_password(self, password):
         return check_password_hash(self.password, password)
 
@@ -75,17 +74,6 @@ class MaintenanceTask(db.Model):
     assigned_to = db.Column(db.String(100), nullable=False)
     due_date = db.Column(db.String(20), nullable=False)  # Considera usar DateTime
 
-def init_db(app):
-    with app.app_context():
-        db.create_all()
-        admin = User.query.filter_by(username='admin').first()
-        if not admin:
-            admin = User(username='admin', role='admin')
-            admin.set_password('admin123')
-            db.session.add(admin)
-        db.session.commit()
-
-<<<<<<< HEAD:Management_system-main/models.py
 class CashRegister(db.Model):
     __tablename__ = 'cash_register'
     id = db.Column(db.Integer, primary_key=True)
@@ -101,6 +89,13 @@ class CashRegister(db.Model):
     def calculate_total(self):
         self.total_amount = self.transfer_amount + self.cash_amount
         return self.total_amount
-=======
 
->>>>>>> fbb751ae58117e00ef12a534c0f0a0dc3b00b846:models.py
+def init_db(app):
+    with app.app_context():
+        db.create_all()
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
+            admin = User(username='admin', role='admin')
+            admin.set_password('admin123')
+            db.session.add(admin)
+        db.session.commit()

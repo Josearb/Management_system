@@ -27,7 +27,7 @@
         <tbody>
             {% for product in products %}
             <tr>
-                <form action="{{ url_for('sales') }}" method="post">
+                <form action="{{ url_for('sales.sales') }}" method="post">
                     <td>{{ product.name }}</td>
                     <td>${{ "%.2f"|format(product.price) }}</td>
                     <td>{{ product.quantity }}</td>
@@ -52,7 +52,7 @@
     </table>
 
     <div class="actions" style="margin-top: 30px;">
-        <a href="{{ url_for('print_daily_report') }}" class="btn btn-secondary" target="_blank">
+        <a href="{{ url_for('sales.print_daily_report') }}" class="btn btn-secondary" target="_blank">
             Generar Reporte
         </a>
 
@@ -98,7 +98,7 @@
 <script>
 function confirmReset() {
     if (confirm('¿Está seguro de reiniciar los contadores diarios y borrar el historial de ventas de hoy?')) {
-        fetch("{{ url_for('reset_daily_sales') }}", {
+        fetch("{{ url_for('sales.reset_daily_sales') }}", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',

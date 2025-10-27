@@ -32,8 +32,8 @@
 
     <div class="no-print" style="margin-top: 20px;">
         <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir</button>
-        <a href="{{ url_for('download_cash_register_pdf') }}" class="btn btn-info">📥 Descargar PDF</a>
-        <a href="{{ url_for('cash_register') }}" class="btn btn-secondary">← Volver a Caja</a>
+        <a href="{{ url_for('cash_register.download_cash_register_pdf') }}" class="btn btn-info">📥 Descargar PDF</a>
+        <a href="{{ url_for('cash_register.cash_register') }}" class="btn btn-secondary">← Volver a Caja</a>
     </div>
 </div>
 

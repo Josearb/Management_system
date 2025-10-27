@@ -6,7 +6,7 @@
     <h2>Módulo de CRM</h2>
     
     <div class="actions">
-        <form action="{{ url_for('crm') }}" method="post" class="inline-form">
+        <form action="{{ url_for('crm.crm') }}" method="post" class="inline-form">
             <input type="text" name="name" placeholder="Nombre" required>
             <input type="email" name="email" placeholder="Email" required>
             <input type="tel" name="phone" placeholder="Teléfono" required>
@@ -32,13 +32,13 @@
                 <td>{{ customer.email }}</td>
                 <td>{{ customer.phone }}</td>
                 <td>
-                    <form action="{{ url_for('update_customer', customer_id=customer.id) }}" method="post" class="inline-form">
+                    <form action="{{ url_for('crm.update_customer', customer_id=customer.id) }}" method="post" class="inline-form">
                         <input type="text" name="name" value="{{ customer.name }}" required>
                         <input type="email" name="email" value="{{ customer.email }}" required>
                         <input type="tel" name="phone" value="{{ customer.phone }}" required>
                         <button type="submit" class="btn-small">Actualizar</button>
                     </form>
-                    <a href="{{ url_for('delete_customer', customer_id=customer.id) }}" class="btn-small btn-danger">Eliminar</a>
+                    <a href="{{ url_for('crm.delete_customer', customer_id=customer.id) }}" class="btn-small btn-danger">Eliminar</a>
                 </td>
             </tr>
             {% endfor %}

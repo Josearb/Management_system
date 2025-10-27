@@ -6,7 +6,7 @@
     <h2>Gestión de Usuarios</h2>
     
     <div class="actions">
-        <form action="{{ url_for('users') }}" method="post" class="inline-form">
+        <form action="{{ url_for('users.users') }}" method="post" class="inline-form">
             <input type="text" name="username" placeholder="Nombre de usuario" required>
             <input type="password" name="password" placeholder="Contraseña" required>
             <select name="role" required>
@@ -35,7 +35,7 @@
                 <td>{{ user.role }}</td>
                 <td>
                     {% if user.id != session['user_id'] %}
-                    <a href="{{ url_for('delete_user', user_id=user.id) }}" class="btn-small btn-danger">Eliminar</a>
+                    <a href="{{ url_for('users.delete_user', user_id=user.id) }}" class="btn-small btn-danger">Eliminar</a>
                     {% endif %}
                 </td>
             </tr>

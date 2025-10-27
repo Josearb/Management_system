@@ -38,7 +38,7 @@
                     <td>${{ "%.2f"|format(record.total_amount) }}</td>
                     <td>{{ record.user.username }}</td>
                     <td>
-                        <a href="{{ url_for('delete_cash_register', register_id=record.id) }}" 
+                        <a href="{{ url_for('cash_register.delete_cash_register', register_id=record.id) }}" 
                            class="btn-small btn-danger" 
                            onclick="return confirm('¿Está seguro de eliminar este registro?')">
                             Eliminar
@@ -59,7 +59,7 @@
     <!-- Formulario para nuevos registros en la parte inferior -->
     <div class="form-section" style="background: #f8fafc; padding: 1.5rem; border-radius: 8px;">
         <h3 style="margin-bottom: 1rem; color: var(--dark-color);">Nuevo Registro</h3>
-        <form action="{{ url_for('cash_register') }}" method="post">
+        <form action="{{ url_for('cash_register.cash_register') }}" method="post">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label for="transfer_amount">Transferencia ($)</label>
@@ -81,10 +81,10 @@
     </div>
 
     <div class="actions" style="margin-top: 2rem;">
-        <a href="{{ url_for('print_cash_register_report') }}" class="btn btn-secondary" target="_blank">
+        <a href="{{ url_for('cash_register.print_cash_register_report') }}" class="btn btn-secondary" target="_blank">
             📄 Generar Reporte
         </a>
-        <a href="{{ url_for('download_cash_register_pdf') }}" class="btn btn-info">
+        <a href="{{ url_for('cash_register.download_cash_register_pdf') }}" class="btn btn-info">
             📥 Descargar PDF
         </a>
     </div>

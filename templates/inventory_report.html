@@ -40,8 +40,8 @@
 
     <div class="no-print" style="margin-top: 20px;">
         <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir</button>
-        <a href="{{ url_for('download_inventory_pdf') }}" class="btn btn-info">📥 Descargar PDF</a>
-        <a href="{{ url_for('inventory') }}" class="btn btn-secondary">← Volver a Inventario</a>
+        <a href="{{ url_for('inventory.download_inventory_pdf') }}" class="btn btn-info">📥 Descargar PDF</a>
+        <a href="{{ url_for('inventory.inventory') }}" class="btn btn-secondary">← Volver a Inventario</a>
     </div>
 </div>
 
