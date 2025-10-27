@@ -85,4 +85,22 @@ def init_db(app):
             db.session.add(admin)
         db.session.commit()
 
+<<<<<<< HEAD:Management_system-main/models.py
+class CashRegister(db.Model):
+    __tablename__ = 'cash_register'
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    transfer_amount = db.Column(db.Float, nullable=False, default=0.0)
+    cash_amount = db.Column(db.Float, nullable=False, default=0.0)
+    total_amount = db.Column(db.Float, nullable=False, default=0.0)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Relación
+    user = db.relationship('User', backref=db.backref('cash_registers', lazy=True))
+    
+    def calculate_total(self):
+        self.total_amount = self.transfer_amount + self.cash_amount
+        return self.total_amount
+=======
 
+>>>>>>> fbb751ae58117e00ef12a534c0f0a0dc3b00b846:models.py

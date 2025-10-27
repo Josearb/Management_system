@@ -3,7 +3,6 @@
 
 {% block content %}
 <div class="dashboard-container">
-    
     <div class="modules-grid">
         {% for module in modules %}
         <a href="{{ url_for(module.route) }}" class="module-card">

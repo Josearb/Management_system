@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file
+<<<<<<< HEAD:Management_system-main/app.py
+from models import db, User, Product, Sale, Customer, MaintenanceTask, DailySales, CashRegister, init_db
+=======
 from models import db, User, Product, Sale, Customer, MaintenanceTask, DailySales, init_db
+>>>>>>> fbb751ae58117e00ef12a534c0f0a0dc3b00b846:app.py
 from datetime import datetime
 from analytics import analytics_bp
 import os
@@ -91,7 +95,12 @@ def dashboard():
             {'name': 'CRM', 'icon': 'images/crm_icon.png', 'description': 'Gestión de clientes y contactos', 'route': 'crm'},
             {'name': 'Mantenimiento', 'icon': 'images/maintenance.png', 'description': 'Gestión de tareas de mantenimiento', 'route': 'maintenance'},
             {'name': 'Usuarios', 'icon': 'images/users.png', 'description': 'Gestión de usuarios del sistema', 'route': 'users'},
+<<<<<<< HEAD:Management_system-main/app.py
+            {'name': 'Analíticas', 'icon': 'images/icons8-analítica-100.png', 'description': 'Estadísticas de ventas', 'route': 'analytics.dashboard'},
+            {'name': 'Registro de Caja', 'icon': 'images/icons8-cajero-automático-100.png', 'description': 'Control de transferencias y efectivo', 'route': 'cash_register'}
+=======
             {'name': 'Analíticas', 'icon': 'images/icons8-analítica-100.png', 'description': 'Estadísticas de ventas', 'route': 'analytics.dashboard'}
+>>>>>>> fbb751ae58117e00ef12a534c0f0a0dc3b00b846:app.py
         ]
     else:
         modules = [
@@ -100,6 +109,145 @@ def dashboard():
         ]
     
     return render_template('dashboard.html', modules=modules)
+
+# Cash Register Module
+@app.route('/cash_register', methods=['GET', 'POST'])
+@login_required
+def cash_register():
+    if request.method == 'POST':
+        try:
+            transfer_amount = float(request.form.get('transfer_amount', 0))
+            cash_amount = float(request.form.get('cash_amount', 0))
+            
+            new_register = CashRegister(
+                transfer_amount=transfer_amount,
+                cash_amount=cash_amount,
+                user_id=session['user_id']
+            )
+            new_register.calculate_total()
+            
+            db.session.add(new_register)
+            db.session.commit()
+            flash('Registro de caja guardado exitosamente', 'success')
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al guardar registro: {str(e)}', 'danger')
+        
+        return redirect(url_for('cash_register'))
+    
+    # GET request - mostrar todos los registros
+    today_records = CashRegister.query.order_by(CashRegister.date.desc()).all()
+    
+    return render_template('cash_register.html', 
+                         today_records=today_records)
+
+@app.route('/cash_register/report')
+@login_required
+def print_cash_register_report():
+    # Obtener registros del día actual
+    today = datetime.utcnow().date()
+    records = CashRegister.query.filter(
+        db.func.date(CashRegister.date) == today
+    ).order_by(CashRegister.date.desc()).all()
+    
+    # Calcular totales
+    total_transfer = sum(record.transfer_amount for record in records)
+    total_cash = sum(record.cash_amount for record in records)
+    grand_total = total_transfer + total_cash
+    
+    return render_template('cash_register_report.html',
+                         records=records,
+                         total_transfer=total_transfer,
+                         total_cash=total_cash,
+                         grand_total=grand_total,
+                         date=datetime.now().strftime("%d/%m/%Y"))
+
+@app.route('/cash_register/report/pdf')
+@login_required
+def download_cash_register_pdf():
+    # Obtener registros del día actual
+    today = datetime.utcnow().date()
+    records = CashRegister.query.filter(
+        db.func.date(CashRegister.date) == today
+    ).order_by(CashRegister.date.desc()).all()
+    
+    # Calcular totales
+    total_transfer = sum(record.transfer_amount for record in records)
+    total_cash = sum(record.cash_amount for record in records)
+    grand_total = total_transfer + total_cash
+    current_date = datetime.now().strftime("%d/%m/%Y")
+    
+    # Crear buffer para el PDF
+    buffer = BytesIO()
+    
+    # Crear documento PDF
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    
+    # Contenido del PDF
+    elements = []
+    
+    # Título
+    elements.append(Paragraph(f"Reporte de Caja - {current_date}", styles['Title']))
+    elements.append(Paragraph("Tradyx", styles['Normal']))
+    elements.append(Paragraph(" ", styles['Normal']))
+    
+    # Datos de la tabla
+    data = [["#", "Fecha/Hora", "Transferencia", "Efectivo", "Total", "Usuario"]]
+    
+    for idx, record in enumerate(records, 1):
+        data.append([
+            str(idx),
+            record.date.strftime("%d/%m/%Y"),
+            f"${record.transfer_amount:.2f}",
+            f"${record.cash_amount:.2f}",
+            f"${record.total_amount:.2f}",
+            record.user.username
+        ])
+    
+    # Crear tabla
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, -1), (-2, -1), colors.lightgrey),
+        ('BACKGROUND', (-1, -1), (-1, -1), colors.grey),
+        ('TEXTCOLOR', (-1, -1), (-1, -1), colors.whitesmoke),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+    ]))
+    
+    elements.append(table)
+    
+    # Generar PDF
+    doc.build(elements)
+    
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"reporte_caja_{current_date.replace('/', '-')}.pdf",
+        mimetype='application/pdf'
+    )
+
+@app.route('/cash_register/delete/<int:register_id>')
+@login_required
+def delete_cash_register(register_id):
+    try:
+        register = CashRegister.query.get_or_404(register_id)
+        db.session.delete(register)
+        db.session.commit()
+        flash('Registro de caja eliminado correctamente', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al eliminar registro: {str(e)}', 'danger')
+    return redirect(url_for('cash_register'))
 
 # Enhanced Sales Module
 @app.route('/sales', methods=['GET', 'POST'])
