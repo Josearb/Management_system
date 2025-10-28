@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, send_file
-from models import db, CashRegister, User
+from models import db, CashRegister, User, get_system_settings
 from auth.routes import login_required
 from datetime import datetime
 from io import BytesIO
@@ -78,6 +78,10 @@ def download_cash_register_pdf():
     grand_total = total_transfer + total_cash
     current_date = datetime.now().strftime("%d/%m/%Y")
     
+    # Obtener configuración de la empresa
+    settings = get_system_settings()
+    company_name = settings.company_name if settings else "Tradyx"
+    
     # Crear buffer para el PDF
     buffer = BytesIO()
     
@@ -88,13 +92,13 @@ def download_cash_register_pdf():
     # Contenido del PDF
     elements = []
     
-    # Título
-    elements.append(Paragraph(f"Reporte de Caja - {current_date}", styles['Title']))
-    elements.append(Paragraph("Tradyx", styles['Normal']))
+    # Título con nombre de la empresa
+    elements.append(Paragraph(f"{company_name}", styles['Title']))
+    elements.append(Paragraph(f"Reporte de Caja - {current_date}", styles['Heading2']))
     elements.append(Paragraph(" ", styles['Normal']))
     
     # Datos de la tabla
-    data = [["#", "Fecha/Hora", "Transferencia", "Efectivo", "Total", "Usuario"]]
+    data = [["#", "Fecha", "Transferencia", "Efectivo", "Total", "Usuario"]]
     
     for idx, record in enumerate(records, 1):
         data.append([
@@ -124,6 +128,12 @@ def download_cash_register_pdf():
     ]))
     
     elements.append(table)
+    
+    # Totales
+    elements.append(Paragraph(" ", styles['Normal']))
+    elements.append(Paragraph(f"Total Transferencia: ${total_transfer:.2f}", styles['Normal']))
+    elements.append(Paragraph(f"Total Efectivo: ${total_cash:.2f}", styles['Normal']))
+    elements.append(Paragraph(f"Total General: ${grand_total:.2f}", styles['Heading3']))
     
     # Generar PDF
     doc.build(elements)

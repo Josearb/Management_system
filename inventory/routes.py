@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, send_file, session
-from models import db, Product, Sale
+from models import db, Product, Sale, get_system_settings
 from auth.routes import login_required, role_required
 from datetime import datetime
 from io import BytesIO
@@ -95,6 +95,11 @@ def download_inventory_pdf():
     total_value = sum(product.price * product.quantity for product in products)
     current_date = datetime.now().strftime("%d/%m/%Y")
     
+    # Obtener configuración de la empresa
+    from app import get_system_settings
+    settings = get_system_settings()
+    company_name = settings.company_name if settings else "Tradyx"
+    
     # Crear buffer para el PDF
     buffer = BytesIO()
     
@@ -105,9 +110,9 @@ def download_inventory_pdf():
     # Contenido del PDF
     elements = []
     
-    # Título
-    elements.append(Paragraph(f"Reporte de Inventario - {current_date}", styles['Title']))
-    elements.append(Paragraph("Tradyx", styles['Normal']))
+    # Título con nombre de la empresa
+    elements.append(Paragraph(f"{company_name}", styles['Title']))
+    elements.append(Paragraph(f"Reporte de Inventario - {current_date}", styles['Heading2']))
     elements.append(Paragraph(" ", styles['Normal']))  # Espacio
     
     # Datos de la tabla - AGREGADA COLUMNA UNIDAD DE MEDIDA

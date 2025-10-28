@@ -90,6 +90,37 @@ class CashRegister(db.Model):
         self.total_amount = self.transfer_amount + self.cash_amount
         return self.total_amount
 
+class SystemSettings(db.Model):
+    __tablename__ = 'system_settings'
+    id = db.Column(db.Integer, primary_key=True)
+    company_name = db.Column(db.String(100), default='Tradyx')
+    currency = db.Column(db.String(10), default='$')
+    date_format = db.Column(db.String(20), default='dd/mm/yyyy')
+    language = db.Column(db.String(10), default='es')
+    dark_mode = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    @classmethod
+    def get_settings(cls):
+        settings = cls.query.first()
+        if not settings:
+            settings = SystemSettings()
+            db.session.add(settings)
+            db.session.commit()
+        return settings
+
+def get_system_settings():
+    """
+    Función auxiliar para obtener la configuración del sistema
+    desde cualquier parte de la aplicación
+    """
+    settings = SystemSettings.query.first()
+    if not settings:
+        settings = SystemSettings()
+        db.session.add(settings)
+        db.session.commit()
+    return settings
+
 def init_db(app):
     with app.app_context():
         db.create_all()

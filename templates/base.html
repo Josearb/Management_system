@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="{% if session.get('dark_mode') %}dark-mode{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tradyx - {% block title %}{% endblock %}</title>
+    <title>{% if settings and settings.company_name %}{{ settings.company_name }} - {% else %}Tradyx - {% endif %}{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -13,7 +13,11 @@
                 <img src="{{ url_for('static', filename='images/icons8-circulacion-de-dinero-100.png') }}"
                      alt="Logo"
                      style="height: 48px; vertical-align: middle; margin-right: 12px;">
-                
+                {% if settings and settings.company_name %}
+                    {{ settings.company_name }}
+                {% else %}
+                    Tradyx
+                {% endif %}
             </h1>
             
             <nav class="nav-edge">
@@ -39,7 +43,14 @@
     </main>
     
     <footer>
-        <p>Tradyx</p>
+        <p>
+            {% if settings and settings.company_name %}
+                {{ settings.company_name }}
+            {% else %}
+                Tradyx
+            {% endif %}
+            - Sistema de Gestión
+        </p>
     </footer>
 </body>
 </html>

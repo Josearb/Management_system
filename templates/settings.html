@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Ajustes del Sistema{% endblock %}
+
+{% block content %}
+<div class="module-container">
+    <h2>⚙️ Configuración del Sistema</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="settings-grid">
+        
+        <!-- Columna 1: Configuración General -->
+        <div class="settings-section">
+            <h3>Configuración General</h3>
+            
+            {% if session['role'] == 'admin' %}
+            <form action="{{ url_for('settings.update_settings') }}" method="post">
+                <div class="form-group">
+                    <label for="company_name">Nombre de la Empresa</label>
+                    <input type="text" id="company_name" name="company_name" 
+                           value="{{ settings.company_name }}" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="currency">Moneda</label>
+                    <select id="currency" name="currency" class="form-control">
+                        <option value="$" {% if settings.currency == '$' %}selected{% endif %}>Pesos ($)</option>
+                        <option value="USD$" {% if settings.currency == 'USD$' %}selected{% endif %}>Dólares (USD$)</option>
+                        <option value="€" {% if settings.currency == '€' %}selected{% endif %}>Euros (€)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date_format">Formato de Fecha</label>
+                    <select id="date_format" name="date_format" class="form-control">
+                        <option value="dd/mm/yyyy" {% if settings.date_format == 'dd/mm/yyyy' %}selected{% endif %}>DD/MM/AAAA</option>
+                        <option value="mm/dd/yyyy" {% if settings.date_format == 'mm/dd/yyyy' %}selected{% endif %}>MM/DD/AAAA</option>
+                        <option value="yyyy-mm-dd" {% if settings.date_format == 'yyyy-mm-dd' %}selected{% endif %}>AAAA-MM-DD</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">💾 Guardar Configuración</button>
+            </form>
+            {% else %}
+            <div class="alert alert-info">
+                Solo los administradores pueden modificar la configuración general del sistema.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Columna 2: Preferencias Personales -->
+        <div class="settings-section">
+            <h3>Preferencias Personales</h3>
+            
+            <!-- Modo Oscuro -->
+            <div class="form-group">
+                <label>Modo Oscuro</label>
+                <div class="toggle-switch">
+                    <label class="switch">
+                        <input type="checkbox" id="darkModeToggle" 
+                               {% if session.get('dark_mode') or settings.dark_mode %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="toggle-label">Activar modo oscuro</span>
+                </div>
+            </div>
+
+            <!-- Cambio de Contraseña -->
+            <div class="password-section">
+                <h4>Cambiar Contraseña</h4>
+                <form action="{{ url_for('settings.change_password') }}" method="post">
+                    <div class="form-group">
+                        <label for="current_password">Contraseña Actual</label>
+                        <input type="password" id="current_password" name="current_password" 
+                               required class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new_password">Nueva Contraseña</label>
+                        <input type="password" id="new_password" name="new_password" 
+                               required minlength="6" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm_password">Confirmar Nueva Contraseña</label>
+                        <input type="password" id="confirm_password" name="confirm_password" 
+                               required minlength="6" class="form-control">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning">🔒 Cambiar Contraseña</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información del Sistema -->
+    <div class="system-info">
+        <h3>📊 Información del Sistema</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>Versión:</strong> 2.0.0
+            </div>
+            <div class="info-item">
+                <strong>Base de Datos:</strong> SQLite
+            </div>
+            <div class="info-item">
+                <strong>Usuarios Registrados:</strong> {{ users_count }}
+            </div>
+            <div class="info-item">
+                <strong>Productos en Inventario:</strong> {{ products_count }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    
+    darkModeToggle.addEventListener('change', function() {
+        fetch("{{ url_for('settings.toggle_dark_mode') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                dark_mode: this.checked
+            })
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  // Recargar para aplicar los estilos del modo oscuro
+                  location.reload();
+              }
+          });
+    });
+});
+</script>
+{% endblock %}

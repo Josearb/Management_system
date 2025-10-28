@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, flash, session, jsonify, send_file, redirect, url_for
-from models import db, Sale, Product, User, DailySales
+from models import db, Sale, Product, User, DailySales, get_system_settings
 from datetime import datetime
 from auth.routes import login_required, role_required
 from io import BytesIO
@@ -213,6 +213,10 @@ def download_sales_pdf():
     total_sales = sum(p.price * p.daily_sales for p in products_sold)
     current_date = datetime.now().strftime("%d/%m/%Y")
     
+    # Obtener configuración de la empresa
+    settings = get_system_settings()
+    company_name = settings.company_name if settings else "Tradyx"
+    
     # Crear buffer para el PDF
     buffer = BytesIO()
     
@@ -223,9 +227,9 @@ def download_sales_pdf():
     # Contenido del PDF
     elements = []
     
-    # Título
-    elements.append(Paragraph(f"Reporte de Ventas - {current_date}", styles['Title']))
-    elements.append(Paragraph("Tradyx", styles['Normal']))
+    # Título con nombre de la empresa
+    elements.append(Paragraph(f"{company_name}", styles['Title']))
+    elements.append(Paragraph(f"Reporte de Ventas - {current_date}", styles['Heading2']))
     elements.append(Paragraph(" ", styles['Normal']))  # Espacio
     
     # Datos de la tabla

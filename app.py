@@ -9,6 +9,7 @@ from crm.routes import crm_bp
 from maintenance.routes import maintenance_bp
 from users.routes import users_bp
 from cash_register.routes import cash_register_bp
+from settings.routes import settings_bp
 from analytics import analytics_bp
 
 app = Flask(__name__)
@@ -22,6 +23,7 @@ app.register_blueprint(crm_bp)
 app.register_blueprint(maintenance_bp)
 app.register_blueprint(users_bp)
 app.register_blueprint(cash_register_bp)
+app.register_blueprint(settings_bp)
 app.register_blueprint(analytics_bp, url_prefix='/analytics')
 
 # Database Configuration
@@ -33,6 +35,25 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 with app.app_context():
     init_db(app)
+
+# Context Processor para hacer disponibles los settings en todas las plantillas
+@app.context_processor
+def inject_settings():
+    from models import SystemSettings
+    try:
+        settings = SystemSettings.get_settings()
+        return dict(settings=settings)
+    except:
+        # Si hay algún error (tabla no existe, etc.), retornar valores por defecto
+        return dict(settings=None)
+
+# Función para obtener settings en las rutas
+def get_system_settings():
+    from models import SystemSettings
+    try:
+        return SystemSettings.get_settings()
+    except:
+        return None
 
 @app.route('/')
 @login_required
@@ -47,7 +68,8 @@ def dashboard():
             {'name': 'Mantenimiento', 'icon': 'images/maintenance.png', 'description': 'Gestión de tareas de mantenimiento', 'route': 'maintenance.maintenance'},
             {'name': 'Usuarios', 'icon': 'images/users.png', 'description': 'Gestión de usuarios del sistema', 'route': 'users.users'},
             {'name': 'Analíticas', 'icon': 'images/icons8-analítica-100.png', 'description': 'Estadísticas de ventas', 'route': 'analytics.dashboard'},
-            {'name': 'Registro de Caja', 'icon': 'images/icons8-cajero-automático-100.png', 'description': 'Control de transferencias y efectivo', 'route': 'cash_register.cash_register'}
+            {'name': 'Registro de Caja', 'icon': 'images/icons8-cajero-automático-100.png', 'description': 'Control de transferencias y efectivo', 'route': 'cash_register.cash_register'},
+            {'name': 'Ajustes', 'icon': 'images/icons8-ajustes-100.png', 'description': 'Configuración del sistema', 'route': 'settings.settings'},
         ]
     else:
         modules = [
