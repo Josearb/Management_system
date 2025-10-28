@@ -69,12 +69,13 @@ def dashboard():
             {'name': 'Usuarios', 'icon': 'images/users.png', 'description': 'Gestión de usuarios del sistema', 'route': 'users.users'},
             {'name': 'Analíticas', 'icon': 'images/icons8-analítica-100.png', 'description': 'Estadísticas de ventas', 'route': 'analytics.dashboard'},
             {'name': 'Registro de Caja', 'icon': 'images/icons8-cajero-automático-100.png', 'description': 'Control de transferencias y efectivo', 'route': 'cash_register.cash_register'},
-            {'name': 'Ajustes', 'icon': 'images/icons8-ajustes-100.png', 'description': 'Configuración del sistema', 'route': 'settings.settings'},
+            {'name': 'Ajustes', 'icon': 'images/icons8-ajustes-100.png', 'description': 'Configuración del sistema', 'route': 'settings.settings'}
         ]
     else:
         modules = [
             {'name': 'Ventas', 'icon': 'images/sales_icon.png', 'description': 'Registro de ventas del día', 'route': 'sales.sales'},
-            {'name': 'Inventario', 'icon': 'images/inventory_icon.png', 'description': 'Consulta de productos', 'route': 'inventory.inventory'}
+            {'name': 'Inventario', 'icon': 'images/inventory_icon.png', 'description': 'Consulta de productos', 'route': 'inventory.inventory'},
+            {'name': 'Ajustes', 'icon': 'images/icons8-ajustes-100.png', 'description': 'Configuración del sistema', 'route': 'settings.settings'}
         ]
     
     return render_template('dashboard.html', modules=modules)

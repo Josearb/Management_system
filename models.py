@@ -97,8 +97,9 @@ class SystemSettings(db.Model):
     currency = db.Column(db.String(10), default='$')
     date_format = db.Column(db.String(20), default='dd/mm/yyyy')
     language = db.Column(db.String(10), default='es')
-    dark_mode = db.Column(db.Boolean, default=False)
+    icon_filename = db.Column(db.String(200), default='icons8-circulacion-de-dinero-100.png')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
     
     @classmethod
     def get_settings(cls):

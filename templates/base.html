@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" class="{% if session.get('dark_mode') %}dark-mode{% endif %}">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,7 @@
     <header class="header-max">
         <div class="nav-extreme">
             <h1 class="logo-edge">
-                <img src="{{ url_for('static', filename='images/icons8-circulacion-de-dinero-100.png') }}"
+                <img src="{{ url_for('static', filename=settings.icon_filename if settings and settings.icon_filename else 'images/icons8-circulacion-de-dinero-100.png') }}"
                      alt="Logo"
                      style="height: 48px; vertical-align: middle; margin-right: 12px;">
                 {% if settings and settings.company_name %}

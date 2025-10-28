@@ -20,11 +20,30 @@
             <h3>Configuración General</h3>
             
             {% if session['role'] == 'admin' %}
-            <form action="{{ url_for('settings.update_settings') }}" method="post">
+            <form action="{{ url_for('settings.update_settings') }}" method="post" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="company_name">Nombre de la Empresa</label>
                     <input type="text" id="company_name" name="company_name" 
                            value="{{ settings.company_name }}" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="icon_file">Icono del Sistema</label>
+                    <input type="file" id="icon_file" name="icon_file" 
+                           accept=".png,.jpg,.jpeg,.gif,.svg,.ico" class="form-control">
+                    <small style="color: #666; font-size: 0.875rem;">
+                        Formatos permitidos: PNG, JPG, JPEG, GIF, SVG, ICO. Tamaño recomendado: 100x100px
+                    </small>
+                    
+                    <!-- Vista previa del icono actual -->
+                    {% if settings and settings.icon_filename %}
+                    <div style="margin-top: 10px;">
+                        <strong>Icono actual:</strong><br>
+                        <img src="{{ url_for('static', filename=settings.icon_filename) }}" 
+                             alt="Icono actual" 
+                             style="height: 60px; margin-top: 8px; border: 1px solid #ddd; border-radius: 4px; padding: 4px;">
+                    </div>
+                    {% endif %}
                 </div>
                 
                 <div class="form-group">
@@ -57,19 +76,6 @@
         <!-- Columna 2: Preferencias Personales -->
         <div class="settings-section">
             <h3>Preferencias Personales</h3>
-            
-            <!-- Modo Oscuro -->
-            <div class="form-group">
-                <label>Modo Oscuro</label>
-                <div class="toggle-switch">
-                    <label class="switch">
-                        <input type="checkbox" id="darkModeToggle" 
-                               {% if session.get('dark_mode') or settings.dark_mode %}checked{% endif %}>
-                        <span class="slider round"></span>
-                    </label>
-                    <span class="toggle-label">Activar modo oscuro</span>
-                </div>
-            </div>
 
             <!-- Cambio de Contraseña -->
             <div class="password-section">
@@ -99,7 +105,8 @@
         </div>
     </div>
 
-    <!-- Información del Sistema -->
+    <!-- Información del Sistema - SOLO PARA ADMIN -->
+    {% if user_role == 'admin' %}
     <div class="system-info">
         <h3>📊 Información del Sistema</h3>
         <div class="info-grid">
@@ -116,30 +123,27 @@
                 <strong>Productos en Inventario:</strong> {{ products_count }}
             </div>
         </div>
+        
+        <!-- Botón de Restauración de Fábrica -->
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+            <h4>🔧 Restauración del Sistema</h4>
+            <p style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">
+                Restaura toda la configuración del sistema a los valores de fábrica. 
+                Esto incluye nombre de empresa, moneda, formato de fecha e icono.
+            </p>
+            <form action="{{ url_for('settings.reset_factory_settings') }}" method="post" onsubmit="return confirmRestore()">
+                <button type="submit" class="btn btn-danger">
+                    🔄 Restaurar Configuración de Fábrica
+                </button>
+            </form>
+        </div>
     </div>
+    {% endif %}
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    
-    darkModeToggle.addEventListener('change', function() {
-        fetch("{{ url_for('settings.toggle_dark_mode') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                dark_mode: this.checked
-            })
-        }).then(response => response.json())
-          .then(data => {
-              if (data.success) {
-                  // Recargar para aplicar los estilos del modo oscuro
-                  location.reload();
-              }
-          });
-    });
-});
+function confirmRestore() {
+    return confirm('⚠️ ¿Está seguro de que desea restaurar la configuración de fábrica?\n\nEsta acción:\n• Restablecerá el nombre de la empresa a "Tradyx"\n• Restablecerá la moneda a "Pesos ($)"\n• Restablecerá el formato de fecha a "DD/MM/AAAA"\n• Restablecerá el icono al predeterminado\n\nEsta acción no se puede deshacer.');
+}
 </script>
 {% endblock %}
