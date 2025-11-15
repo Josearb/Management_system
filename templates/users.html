@@ -35,7 +35,14 @@
                 <td>{{ user.role }}</td>
                 <td>
                     {% if user.id != session['user_id'] %}
-                    <a href="{{ url_for('users.delete_user', user_id=user.id) }}" class="btn-small btn-danger">Eliminar</a>
+                    <a href="#" 
+                       class="btn-small btn-danger delete-user-btn" 
+                       data-user-id="{{ user.id }}" 
+                       data-user-name="{{ user.username }}">
+                        Eliminar
+                    </a>
+                    {% else %}
+                    <span class="text-muted">Usuario actual</span>
                     {% endif %}
                 </td>
             </tr>
@@ -43,4 +50,69 @@
         </tbody>
     </table>
 </div>
+
+<!-- Modal de confirmación personalizado -->
+<div id="confirmModal" class="confirm-modal">
+    <div class="confirm-modal-content">
+        <h3>⚠️ Confirmar Eliminación</h3>
+        <p id="confirmMessage"></p>
+        <div class="confirm-modal-buttons">
+            <button id="cancelBtn" class="btn btn-secondary">Cancelar</button>
+            <button id="confirmBtn" class="btn btn-danger">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('confirmModal');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+    let deleteUrl = '';
+
+    // Agregar event listeners a todos los botones de eliminar
+    document.querySelectorAll('.delete-user-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const userName = this.getAttribute('data-user-name');
+            const userId = this.getAttribute('data-user-id');
+            
+            deleteUrl = "{{ url_for('users.delete_user', user_id=0) }}".replace('0', userId);
+            confirmMessage.textContent = `¿Está seguro de que desea eliminar al usuario "${userName}"?\n\nEsta acción eliminará permanentemente al usuario y todas sus ventas asociadas.\n\n⚠️ Esta acción no se puede deshacer.`;
+            
+            modal.style.display = 'block';
+        });
+    });
+
+    // Botón Cancelar
+    cancelBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+        deleteUrl = '';
+    });
+
+    // Botón Confirmar
+    confirmBtn.addEventListener('click', function() {
+        if (deleteUrl) {
+            window.location.href = deleteUrl;
+        }
+    });
+
+    // Cerrar modal haciendo clic fuera del contenido
+    window.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            deleteUrl = '';
+        }
+    });
+
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'block') {
+            modal.style.display = 'none';
+            deleteUrl = '';
+        }
+    });
+});
+</script>
 {% endblock %}

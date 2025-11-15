@@ -13,11 +13,17 @@
                 <img src="{{ url_for('static', filename=settings.icon_filename if settings and settings.icon_filename else 'images/icons8-circulacion-de-dinero-100.png') }}"
                      alt="Logo"
                      style="height: 48px; vertical-align: middle; margin-right: 12px;">
-                {% if settings and settings.company_name %}
-                    {{ settings.company_name }}
-                {% else %}
-                    Tradyx
-                {% endif %}
+                <span class="logo-text">
+                    {% if settings and settings.company_name %}
+                        {% if "Sistema de Gestión de Ventas" in settings.company_name %}
+                            Sistema de Gestión de Ventas <strong>{{ settings.company_name.replace('Sistema de Gestión de Ventas', '').strip() }}</strong>
+                        {% else %}
+                            <strong>{{ settings.company_name }}</strong>
+                        {% endif %}
+                    {% else %}
+                        <strong>Tradyx</strong>
+                    {% endif %}
+                </span>
             </h1>
             
             <nav class="nav-edge">
@@ -45,9 +51,13 @@
     <footer>
         <p>
             {% if settings and settings.company_name %}
-                {{ settings.company_name }}
+                {% if "Sistema de Gestión de Ventas" in settings.company_name %}
+                    Sistema de Gestión de Ventas <strong>{{ settings.company_name.replace('Sistema de Gestión de Ventas', '').strip() }}</strong>
+                {% else %}
+                    <strong>{{ settings.company_name }}</strong>
+                {% endif %}
             {% else %}
-                Tradyx
+                <strong>Tradyx</strong>
             {% endif %}
             - Sistema de Gestión
         </p>

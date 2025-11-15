@@ -66,7 +66,13 @@
                             </select>
                             <button type="submit" class="btn-small">Actualizar</button>
                         </form>
-                        <a href="{{ url_for('inventory.delete_product', product_id=product.id) }}" class="btn-small btn-danger">Eliminar</a>
+                        <!-- Cambiamos el enlace por un botón para abrir el modal -->
+                        <button type="button" 
+                                class="btn-small btn-danger delete-product-btn" 
+                                data-product-id="{{ product.id }}" 
+                                data-product-name="{{ product.name }}">
+                            Eliminar
+                        </button>
                     {% else %}
                         <span class="text-muted">Solo lectura</span>
                     {% endif %}
@@ -84,4 +90,69 @@
         </a>
     </div>
 </div>
+
+<!-- Modal de confirmación personalizado -->
+<div id="confirmModal" class="confirm-modal">
+    <div class="confirm-modal-content">
+        <h3>⚠️ Confirmar Eliminación</h3>
+        <p id="confirmMessage"></p>
+        <div class="confirm-modal-buttons">
+            <button id="cancelBtn" class="btn btn-secondary">Cancelar</button>
+            <button id="confirmBtn" class="btn btn-danger">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('confirmModal');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+    let deleteUrl = '';
+
+    // Agregar event listeners a todos los botones de eliminar producto
+    document.querySelectorAll('.delete-product-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const productName = this.getAttribute('data-product-name');
+            const productId = this.getAttribute('data-product-id');
+            
+            deleteUrl = "{{ url_for('inventory.delete_product', product_id=0) }}".replace('0', productId);
+            confirmMessage.textContent = `¿Está seguro de que desea eliminar el producto "${productName}"?\n\nEsta acción eliminará permanentemente el producto y todas sus ventas asociadas.\n\n⚠️ Esta acción no se puede deshacer.`;
+            
+            modal.style.display = 'block';
+        });
+    });
+
+    // Botón Cancelar
+    cancelBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+        deleteUrl = '';
+    });
+
+    // Botón Confirmar
+    confirmBtn.addEventListener('click', function() {
+        if (deleteUrl) {
+            window.location.href = deleteUrl;
+        }
+    });
+
+    // Cerrar modal haciendo clic fuera del contenido
+    window.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            deleteUrl = '';
+        }
+    });
+
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'block') {
+            modal.style.display = 'none';
+            deleteUrl = '';
+        }
+    });
+});
+</script>
 {% endblock %}
