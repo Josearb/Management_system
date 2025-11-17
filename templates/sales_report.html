@@ -1,43 +1,57 @@
 {% extends "base.html" %}
-{% block title %}Reporte Diario{% endblock %}
+{% block title %}Reporte de Caja{% endblock %}
 
 {% block content %}
 <div class="module-container">
-    <h2>📄 Reporte de Ventas - {{ date }}</h2>
+    <h2>📄 Reporte Completo de Caja - {{ date }}</h2>
 
+    {% if records %}
     <table class="data-table">
         <thead>
             <tr>
                 <th>#</th>
-                <th>Producto</th>
-                <th>Cantidad Vendida</th>
-                <th>Precio Unitario</th>
-                <th>Subtotal</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Transferencia</th>
+                <th>Efectivo</th>
+                <th>Total</th>
+                <th>Usuario</th>
             </tr>
         </thead>
         <tbody>
-            {% for product in products %}
+            {% for record in records %}
             <tr>
                 <td>{{ loop.index }}</td>
-                <td>{{ product.name }}</td>
-                <td>{{ product.daily_sales }}</td>
-                <td>${{ "%.2f"|format(product.price) }}</td>
-                <td>${{ "%.2f"|format(product.price * product.daily_sales) }}</td>
+                <td>{{ record.date.strftime('%d/%m/%Y') }}</td>
+                <td>{{ record.date.strftime('%H:%M') }}</td>
+                <td>${{ "%.2f"|format(record.transfer_amount) }}</td>
+                <td>${{ "%.2f"|format(record.cash_amount) }}</td>
+                <td>${{ "%.2f"|format(record.total_amount) }}</td>
+                <td>{{ record.user.username }}</td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot>
-            <tr>
-                <td colspan="4" style="text-align: right;"><strong>Total:</strong></td>
-                <td><strong>${{ "%.2f"|format(total) }}</strong></td>
+            <tr style="background-color: #f8f9fa;">
+                <td colspan="3" style="text-align: right;"><strong>Totales:</strong></td>
+                <td><strong>${{ "%.2f"|format(total_transfer) }}</strong></td>
+                <td><strong>${{ "%.2f"|format(total_cash) }}</strong></td>
+                <td><strong>${{ "%.2f"|format(grand_total) }}</strong></td>
+                <td></td>
             </tr>
         </tfoot>
     </table>
+    {% else %}
+    <div style="text-align: center; padding: 3rem; background: #f8fafc; border-radius: 8px;">
+        <h3 style="color: var(--gray-color);">No hay registros de caja</h3>
+        <p>No se han encontrado registros de caja para mostrar en el reporte.</p>
+    </div>
+    {% endif %}
 
     <div class="no-print" style="margin-top: 20px;">
-        <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir</button>
-        <a href="{{ url_for('sales.download_sales_pdf') }}" class="btn btn-info">📥 Descargar PDF</a>
-        <a href="{{ url_for('sales.sales') }}" class="btn btn-secondary">← Volver a Ventas</a>
+        <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir Reporte</button>
+        <a href="{{ url_for('cash_register.download_cash_register_pdf') }}" class="btn btn-info">📥 Descargar PDF</a>
+        <a href="{{ url_for('cash_register.cash_register') }}" class="btn btn-secondary">← Volver a Caja</a>
     </div>
 </div>
 {% endblock %}

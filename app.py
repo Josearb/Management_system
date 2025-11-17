@@ -67,7 +67,7 @@ def dashboard():
             {'name': 'CRM', 'icon': 'images/crm_icon.png', 'description': 'Gestión de clientes y contactos', 'route': 'crm.crm'},
             {'name': 'Mantenimiento', 'icon': 'images/maintenance.png', 'description': 'Gestión de tareas de mantenimiento', 'route': 'maintenance.maintenance'},
             {'name': 'Usuarios', 'icon': 'images/users.png', 'description': 'Gestión de usuarios del sistema', 'route': 'users.users'},
-            {'name': 'Analíticas', 'icon': 'images/icons8-analítica-100.png', 'description': 'Estadísticas de ventas', 'route': 'analytics.dashboard'},
+            {'name': 'Administrar Ventas', 'icon': 'images/icons8-analítica-100.png', 'description': 'Estadísticas de ventas', 'route': 'analytics.dashboard'},
             {'name': 'Registro de Caja', 'icon': 'images/icons8-cajero-automático-100.png', 'description': 'Control de transferencias y efectivo', 'route': 'cash_register.cash_register'},
             {'name': 'Ajustes', 'icon': 'images/icons8-ajustes-100.png', 'description': 'Configuración del sistema', 'route': 'settings.settings'}
         ]

@@ -36,20 +36,17 @@ def cash_register():
         
         return redirect(url_for('cash_register.cash_register'))
     
-    # GET request - mostrar todos los registros
-    today_records = CashRegister.query.order_by(CashRegister.date.desc()).all()
+    # GET request - mostrar todos los registros (NO solo los de hoy)
+    all_records = CashRegister.query.order_by(CashRegister.date.desc()).all()
     
     return render_template('cash_register.html', 
-                         today_records=today_records)
+                         today_records=all_records)  # Cambiado el nombre para claridad
 
 @cash_register_bp.route('/cash_register/report')
 @login_required
 def print_cash_register_report():
-    # Obtener registros del día actual
-    today = datetime.utcnow().date()
-    records = CashRegister.query.filter(
-        db.func.date(CashRegister.date) == today
-    ).order_by(CashRegister.date.desc()).all()
+    # Obtener TODOS los registros, no solo los del día actual
+    records = CashRegister.query.order_by(CashRegister.date.desc()).all()
     
     # Calcular totales
     total_transfer = sum(record.transfer_amount for record in records)
@@ -66,11 +63,8 @@ def print_cash_register_report():
 @cash_register_bp.route('/cash_register/report/pdf')
 @login_required
 def download_cash_register_pdf():
-    # Obtener registros del día actual
-    today = datetime.utcnow().date()
-    records = CashRegister.query.filter(
-        db.func.date(CashRegister.date) == today
-    ).order_by(CashRegister.date.desc()).all()
+    # Obtener TODOS los registros, no solo los del día actual
+    records = CashRegister.query.order_by(CashRegister.date.desc()).all()
     
     # Calcular totales
     total_transfer = sum(record.transfer_amount for record in records)
@@ -97,43 +91,44 @@ def download_cash_register_pdf():
     elements.append(Paragraph(f"Reporte de Caja - {current_date}", styles['Heading2']))
     elements.append(Paragraph(" ", styles['Normal']))
     
-    # Datos de la tabla
-    data = [["#", "Fecha", "Transferencia", "Efectivo", "Total", "Usuario"]]
-    
-    for idx, record in enumerate(records, 1):
-        data.append([
-            str(idx),
-            record.date.strftime("%d/%m/%Y"),
-            f"${record.transfer_amount:.2f}",
-            f"${record.cash_amount:.2f}",
-            f"${record.total_amount:.2f}",
-            record.user.username
-        ])
-    
-    # Crear tabla
-    table = Table(data)
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -2), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('BACKGROUND', (0, -1), (-2, -1), colors.lightgrey),
-        ('BACKGROUND', (-1, -1), (-1, -1), colors.grey),
-        ('TEXTCOLOR', (-1, -1), (-1, -1), colors.whitesmoke),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-    ]))
-    
-    elements.append(table)
-    
-    # Totales
-    elements.append(Paragraph(" ", styles['Normal']))
-    elements.append(Paragraph(f"Total Transferencia: ${total_transfer:.2f}", styles['Normal']))
-    elements.append(Paragraph(f"Total Efectivo: ${total_cash:.2f}", styles['Normal']))
-    elements.append(Paragraph(f"Total General: ${grand_total:.2f}", styles['Heading3']))
+    # Si no hay registros, mostrar mensaje
+    if not records:
+        elements.append(Paragraph("No hay registros de caja disponibles.", styles['Normal']))
+    else:
+        # Datos de la tabla
+        data = [["#", "Fecha", "Hora", "Transferencia", "Efectivo", "Total", "Usuario"]]
+        
+        for idx, record in enumerate(records, 1):
+            data.append([
+                str(idx),
+                record.date.strftime("%d/%m/%Y"),
+                record.date.strftime("%H:%M"),
+                f"${record.transfer_amount:.2f}",
+                f"${record.cash_amount:.2f}",
+                f"${record.total_amount:.2f}",
+                record.user.username
+            ])
+        
+        # Crear tabla
+        table = Table(data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        
+        elements.append(table)
+        
+        # Totales
+        elements.append(Paragraph(" ", styles['Normal']))
+        elements.append(Paragraph(f"Total Transferencia: ${total_transfer:.2f}", styles['Normal']))
+        elements.append(Paragraph(f"Total Efectivo: ${total_cash:.2f}", styles['Normal']))
+        elements.append(Paragraph(f"Total General: ${grand_total:.2f}", styles['Heading3']))
     
     # Generar PDF
     doc.build(elements)
@@ -142,7 +137,7 @@ def download_cash_register_pdf():
     return send_file(
         buffer,
         as_attachment=True,
-        download_name=f"reporte_caja_{current_date.replace('/', '-')}.pdf",
+        download_name=f"reporte_caja_completo_{current_date.replace('/', '-')}.pdf",
         mimetype='application/pdf'
     )
 

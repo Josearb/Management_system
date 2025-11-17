@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="module-container">
-    <h2>Registro de Caja</h2>
+    <h2>💰 Registro de Caja</h2>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -13,14 +13,57 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Tabla de registros en la parte superior -->
+    <!-- Botón para mostrar formulario -->
+    <div class="actions" style="margin-bottom: 2rem;">
+        <button type="button" id="showFormBtn" class="btn btn-primary">
+            ➕ Agregar Nuevo Registro
+        </button>
+    </div>
+
+    <!-- Formulario para nuevos registros (oculto inicialmente) -->
+    <div id="registerForm" class="form-section" style="display: none;">
+        <h3 style="margin-bottom: 1rem; color: var(--dark-color);">Nuevo Registro de Caja</h3>
+        <form action="{{ url_for('cash_register.cash_register') }}" method="post" id="cashForm">
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="transfer_amount">Transferencia ($)</label>
+                    <input type="number" step="0.01" id="transfer_amount" name="transfer_amount" 
+                           placeholder="0.00" required min="0" class="form-control" value="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="cash_amount">Efectivo ($)</label>
+                    <input type="number" step="0.01" id="cash_amount" name="cash_amount" 
+                           placeholder="0.00" required min="0" class="form-control" value="0">
+                </div>
+            </div>
+            
+            <!-- Vista previa del total -->
+            <div id="totalPreview" class="total-preview">
+                <strong>Total a registrar: <span id="totalAmount" class="total-amount">$0.00</span></strong>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">
+                    💾 Guardar Registro
+                </button>
+                <button type="button" id="cancelFormBtn" class="btn btn-secondary">
+                    ❌ Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de registros existentes -->
     <div class="mb-4">
-        <h3>Registros Existentes</h3>
+        <h3>📋 Historial de Registros</h3>
+        {% if today_records %}
         <table class="data-table">
             <thead>
                 <tr>
                     <th>#</th>
                     <th>Fecha</th>
+                    <th>Hora</th>
                     <th>Transferencia</th>
                     <th>Efectivo</th>
                     <th>Total</th>
@@ -33,84 +76,211 @@
                 <tr>
                     <td>{{ loop.index }}</td>
                     <td>{{ record.date.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ record.date.strftime('%H:%M') }}</td>
                     <td>${{ "%.2f"|format(record.transfer_amount) }}</td>
                     <td>${{ "%.2f"|format(record.cash_amount) }}</td>
-                    <td>${{ "%.2f"|format(record.total_amount) }}</td>
+                    <td><strong>${{ "%.2f"|format(record.total_amount) }}</strong></td>
                     <td>{{ record.user.username }}</td>
                     <td>
-                        <a href="{{ url_for('cash_register.delete_cash_register', register_id=record.id) }}" 
-                           class="btn-small btn-danger" 
-                           onclick="return confirm('¿Está seguro de eliminar este registro?')">
-                            Eliminar
-                        </a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="7" style="text-align: center; color: var(--gray-color);">
-                        No hay registros para hoy
+                        <button type="button" class="btn-small btn-danger delete-register-btn" 
+                                data-register-id="{{ record.id }}" 
+                                data-register-amount="${{ '%.2f'|format(record.total_amount) }}"
+                                data-register-date="{{ record.date.strftime('%d/%m/%Y %H:%M') }}">
+                            🗑️ Eliminar
+                        </button>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3"><strong>Totales:</strong></td>
+                    <td><strong>${{ "%.2f"|format(today_records|sum(attribute='transfer_amount')) }}</strong></td>
+                    <td><strong>${{ "%.2f"|format(today_records|sum(attribute='cash_amount')) }}</strong></td>
+                    <td><strong>${{ "%.2f"|format(today_records|sum(attribute='total_amount')) }}</strong></td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
         </table>
+        {% else %}
+        <div class="empty-state">
+            <p>No hay registros de caja disponibles.</p>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Formulario para nuevos registros en la parte inferior -->
-    <div class="form-section" style="background: #f8fafc; padding: 1.5rem; border-radius: 8px;">
-        <h3 style="margin-bottom: 1rem; color: var(--dark-color);">Nuevo Registro</h3>
-        <form action="{{ url_for('cash_register.cash_register') }}" method="post">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                    <label for="transfer_amount">Transferencia ($)</label>
-                    <input type="number" step="0.01" id="transfer_amount" name="transfer_amount" 
-                           placeholder="0.00" required min="0" class="form-control">
-                </div>
-                
-                <div class="form-group">
-                    <label for="cash_amount">Efectivo ($)</label>
-                    <input type="number" step="0.01" id="cash_amount" name="cash_amount" 
-                           placeholder="0.00" required min="0" class="form-control">
-                </div>
-            </div>
-            
-            <div style="margin-top: 1.5rem;">
-                <button type="submit" class="btn btn-primary">💾 Guardar Registro</button>
-            </div>
-        </form>
-    </div>
-
+    <!-- Acciones de reportes -->
     <div class="actions" style="margin-top: 2rem;">
         <a href="{{ url_for('cash_register.print_cash_register_report') }}" class="btn btn-secondary" target="_blank">
-            📄 Generar Reporte
+            📄 Generar Reporte Completo
         </a>
         <a href="{{ url_for('cash_register.download_cash_register_pdf') }}" class="btn btn-info">
-            📥 Descargar PDF
+            📥 Descargar PDF Completo
         </a>
     </div>
 </div>
 
+<!-- Modal de confirmación unificado -->
+<div id="confirmModal" class="confirm-modal">
+    <div class="confirm-modal-content">
+        <h3 id="confirmTitle">⚠️ Confirmar Acción</h3>
+        <p id="confirmMessage"></p>
+        <div class="confirm-modal-buttons">
+            <button id="cancelBtn" class="btn btn-secondary">Cancelar</button>
+            <button id="confirmBtn" class="btn btn-danger">Confirmar</button>
+        </div>
+    </div>
+</div>
+
 <script>
-// Validación del formulario
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form');
+    const showFormBtn = document.getElementById('showFormBtn');
+    const registerForm = document.getElementById('registerForm');
+    const cancelFormBtn = document.getElementById('cancelFormBtn');
+    const cashForm = document.getElementById('cashForm');
     const transferInput = document.getElementById('transfer_amount');
     const cashInput = document.getElementById('cash_amount');
-    
-    form.addEventListener('submit', function(e) {
+    const totalPreview = document.getElementById('totalPreview');
+    const totalAmount = document.getElementById('totalAmount');
+
+    // Elementos del modal
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+
+    let currentAction = null;
+    let deleteUrl = '';
+
+    // Mostrar formulario al hacer clic en "Agregar"
+    showFormBtn.addEventListener('click', function() {
+        registerForm.style.display = 'block';
+        registerForm.classList.add('fade-in');
+        showFormBtn.style.display = 'none';
+        transferInput.focus();
+    });
+
+    // Ocultar formulario al hacer clic en "Cancelar"
+    cancelFormBtn.addEventListener('click', function() {
+        registerForm.style.display = 'none';
+        showFormBtn.style.display = 'block';
+        cashForm.reset();
+        totalPreview.style.display = 'none';
+    });
+
+    // Calcular total en tiempo real
+    function calculateTotal() {
+        const transfer = parseFloat(transferInput.value) || 0;
+        const cash = parseFloat(cashInput.value) || 0;
+        const total = transfer + cash;
+        
+        if (total > 0) {
+            totalAmount.textContent = `$${total.toFixed(2)}`;
+            totalPreview.style.display = 'block';
+        } else {
+            totalPreview.style.display = 'none';
+        }
+    }
+
+    transferInput.addEventListener('input', calculateTotal);
+    cashInput.addEventListener('input', calculateTotal);
+
+    // Validación del formulario con modal de confirmación
+    cashForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
         const transfer = parseFloat(transferInput.value) || 0;
         const cash = parseFloat(cashInput.value) || 0;
         
         if (transfer === 0 && cash === 0) {
-            e.preventDefault();
-            alert('Debe ingresar al menos un valor en transferencia o efectivo');
+            alert('⚠️ Debe ingresar al menos un valor en transferencia o efectivo');
+            transferInput.focus();
             return false;
         }
         
         if (transfer < 0 || cash < 0) {
-            e.preventDefault();
-            alert('Los valores no pueden ser negativos');
+            alert('❌ Los valores no pueden ser negativos');
             return false;
+        }
+        
+        const total = transfer + cash;
+        
+        // Mostrar modal de confirmación
+        confirmTitle.textContent = '💾 Confirmar Registro';
+        confirmTitle.style.color = 'var(--success-color)';
+        confirmModal.querySelector('.confirm-modal-content').style.borderTopColor = 'var(--success-color)';
+        confirmMessage.textContent = `¿Está seguro de que desea guardar este registro?\n\n• Transferencia: $${transfer.toFixed(2)}\n• Efectivo: $${cash.toFixed(2)}\n• Total: $${total.toFixed(2)}`;
+        confirmBtn.textContent = 'Guardar';
+        confirmBtn.className = 'btn btn-success';
+        
+        currentAction = 'save';
+        showModal();
+    });
+
+    // Manejar eliminación de registros
+    document.querySelectorAll('.delete-register-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const registerId = this.getAttribute('data-register-id');
+            const registerAmount = this.getAttribute('data-register-amount');
+            const registerDate = this.getAttribute('data-register-date');
+            
+            deleteUrl = "{{ url_for('cash_register.delete_cash_register', register_id=0) }}".replace('0', registerId);
+            
+            confirmTitle.textContent = '🗑️ Eliminar Registro';
+            confirmTitle.style.color = 'var(--danger-color)';
+            confirmModal.querySelector('.confirm-modal-content').style.borderTopColor = 'var(--danger-color)';
+            confirmMessage.textContent = `¿Está seguro de que desea eliminar este registro?\n\n• Fecha: ${registerDate}\n• Monto: ${registerAmount}\n\n⚠️ Esta acción no se puede deshacer.`;
+            confirmBtn.textContent = 'Eliminar';
+            confirmBtn.className = 'btn btn-danger';
+            
+            currentAction = 'delete';
+            showModal();
+        });
+    });
+
+    // Mostrar modal
+    function showModal() {
+        confirmModal.style.display = 'block';
+    }
+
+    // Ocultar modal
+    function hideModal() {
+        confirmModal.style.display = 'none';
+        currentAction = null;
+        deleteUrl = '';
+    }
+
+    // Botón Cancelar del modal
+    cancelBtn.addEventListener('click', hideModal);
+
+    // Botón Confirmar del modal
+    confirmBtn.addEventListener('click', function() {
+        if (currentAction === 'save') {
+            // Enviar formulario de guardado
+            cashForm.submit();
+        } else if (currentAction === 'delete' && deleteUrl) {
+            // Redirigir a eliminación
+            window.location.href = deleteUrl;
+        }
+        hideModal();
+    });
+
+    // Cerrar modal haciendo clic fuera
+    window.addEventListener('click', function(e) {
+        if (e.target === confirmModal) {
+            hideModal();
+        }
+    });
+
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && confirmModal.style.display === 'block') {
+            hideModal();
+        }
+        
+        if (e.key === 'Escape' && registerForm.style.display === 'block') {
+            cancelFormBtn.click();
         }
     });
 });

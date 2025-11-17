@@ -5,7 +5,7 @@ from datetime import datetime  # Importación faltante
 db = SQLAlchemy()
 
 class User(db.Model):
-    __tablename__ = 'user'  # Nombre explícito de tabla
+    __tablename__ = 'user'  
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
@@ -27,7 +27,7 @@ class Product(db.Model):
     unit_measure = db.Column(db.String(20), nullable=False, default='unidades')
     
     def actual_sales_today(self):
-        return sum(sale.quantity for sale in self.product_sales if  # Cambiado a product_sales
+        return sum(sale.quantity for sale in self.product_sales if  
                  sale.date.startswith(datetime.now().strftime("%Y-%m-%d")))
 
 class Sale(db.Model):
@@ -35,7 +35,7 @@ class Sale(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer = db.Column(db.String(100), nullable=False)
     total = db.Column(db.Float, nullable=False)
-    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  # Considera usar DateTime
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
