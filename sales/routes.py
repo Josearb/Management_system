@@ -52,7 +52,15 @@ def sales():
         return redirect(url_for('sales.sales'))
     
     # GET request
-    products = Product.query.order_by(Product.name).all()
+    search_query = request.args.get('search', '').strip()
+    
+    if search_query:
+        # Filtrar productos por nombre (búsqueda case-insensitive)
+        products = Product.query.filter(
+            Product.name.ilike(f'%{search_query}%')
+        ).order_by(Product.name).all()
+    else:
+        products = Product.query.order_by(Product.name).all()
     
     # Obtener actividades para el chatter
     chatter_activities = db.session.query(
@@ -74,7 +82,8 @@ def sales():
                          products=products,
                          chatter_activities=chatter_activities,
                          current_date=datetime.utcnow().date(),
-                         today_total=today_total)
+                         today_total=today_total,
+                         search_query=search_query)
 
 @sales_bp.route('/api/sales', methods=['POST'])
 @login_required

@@ -31,8 +31,20 @@ def inventory():
             flash(f'Error al agregar producto: {str(e)}', 'danger')
         return redirect(url_for('inventory.inventory'))
     
-    products = Product.query.order_by(Product.name).all()
-    return render_template('inventory.html', products=products)
+    # Obtener parámetro de búsqueda
+    search_query = request.args.get('search', '').strip()
+    
+    if search_query:
+        # Filtrar productos por nombre (búsqueda case-insensitive)
+        products = Product.query.filter(
+            Product.name.ilike(f'%{search_query}%')
+        ).order_by(Product.name).all()
+    else:
+        products = Product.query.order_by(Product.name).all()
+    
+    return render_template('inventory.html', 
+                         products=products, 
+                         search_query=search_query)
 
 @inventory_bp.route('/inventory/delete/<int:product_id>')
 @login_required

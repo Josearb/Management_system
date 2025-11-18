@@ -25,6 +25,43 @@
         {% endif %}
     {% endwith %}
 
+    <!-- Barra de búsqueda flotante -->
+    <div class="search-container">
+        <!-- Botón de lupa -->
+        <button type="button" id="searchToggle" class="btn btn-primary search-toggle">
+            🔍
+        </button>
+        
+        <!-- Formulario de búsqueda (oculto inicialmente) -->
+        <div id="searchForm" class="search-form">
+            <form method="GET" action="{{ url_for('inventory.inventory') }}" class="search-inline-form">
+                <input type="text" 
+                       name="search" 
+                       placeholder="Buscar producto..." 
+                       value="{{ search_query }}"
+                       class="search-input"
+                       id="searchInput">
+                <button type="submit" class="btn btn-primary btn-small">Buscar</button>
+                {% if search_query %}
+                <a href="{{ url_for('inventory.inventory') }}" class="btn btn-secondary btn-small">X</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Información de resultados -->
+    {% if search_query %}
+    <div class="alert alert-info search-results-info">
+        {% if products %}
+            Mostrando {{ products|length }} producto(s) para "<strong>{{ search_query }}</strong>"
+            <a href="{{ url_for('inventory.inventory') }}" class="show-all-link">[Mostrar todos]</a>
+        {% else %}
+            No se encontraron productos para "<strong>{{ search_query }}</strong>"
+            <a href="{{ url_for('inventory.inventory') }}" class="show-all-link">[Mostrar todos]</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <!-- Panel de Acciones Principales -->
     {% if session['role'] == 'admin' %}
     <div class="action-panel">
@@ -184,8 +221,20 @@
         {% else %}
         <div class="empty-state">
             <div class="empty-state-icon">📦</div>
-            <h4>No hay productos en el inventario</h4>
-            <p>Comienza agregando tu primer producto usando el formulario superior.</p>
+            <h4>
+                {% if search_query %}
+                No se encontraron productos para "{{ search_query }}"
+                {% else %}
+                No hay productos en el inventario
+                {% endif %}
+            </h4>
+            <p>
+                {% if search_query %}
+                Intenta con otros términos de búsqueda o <a href="{{ url_for('inventory.inventory') }}">muestra todos los productos</a>.
+                {% else %}
+                Comienza agregando tu primer producto usando el formulario superior.
+                {% endif %}
+            </p>
         </div>
         {% endif %}
     </div>
@@ -263,6 +312,33 @@ document.addEventListener('DOMContentLoaded', function() {
             modal.style.display = 'none';
             deleteUrl = '';
         }
+    });
+
+    // Funcionalidad para el buscador con lupa
+    const searchToggle = document.getElementById('searchToggle');
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('searchInput');
+    
+    // Alternar visibilidad del formulario de búsqueda
+    searchToggle.addEventListener('click', function() {
+        if (searchForm.style.display === 'none') {
+            searchForm.style.display = 'block';
+            searchInput.focus();
+        } else {
+            searchForm.style.display = 'none';
+        }
+    });
+    
+    // Cerrar el buscador al hacer clic fuera
+    document.addEventListener('click', function(event) {
+        if (!searchToggle.contains(event.target) && !searchForm.contains(event.target)) {
+            searchForm.style.display = 'none';
+        }
+    });
+    
+    // Prevenir que el clic en el formulario cierre el buscador
+    searchForm.addEventListener('click', function(event) {
+        event.stopPropagation();
     });
 });
 </script>

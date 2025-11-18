@@ -13,6 +13,43 @@
         {% endif %}
     {% endwith %}
 
+    <!-- Barra de búsqueda flotante -->
+    <div class="search-container">
+        <!-- Botón de lupa -->
+        <button type="button" id="searchToggle" class="btn btn-primary search-toggle">
+            🔍
+        </button>
+        
+        <!-- Formulario de búsqueda (oculto inicialmente) -->
+        <div id="searchForm" class="search-form">
+            <form method="GET" action="{{ url_for('sales.sales') }}" class="search-inline-form">
+                <input type="text" 
+                       name="search" 
+                       placeholder="Buscar producto..." 
+                       value="{{ search_query }}"
+                       class="search-input"
+                       id="searchInput">
+                <button type="submit" class="btn btn-primary btn-small">Buscar</button>
+                {% if search_query %}
+                <a href="{{ url_for('sales.sales') }}" class="btn btn-secondary btn-small">X</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Información de resultados -->
+    {% if search_query %}
+    <div class="alert alert-info search-results-info">
+        {% if products %}
+            Mostrando {{ products|length }} producto(s) para "<strong>{{ search_query }}</strong>"
+            <a href="{{ url_for('sales.sales') }}" class="show-all-link">[Mostrar todos]</a>
+        {% else %}
+            No se encontraron productos para "<strong>{{ search_query }}</strong>"
+            <a href="{{ url_for('sales.sales') }}" class="show-all-link">[Mostrar todos]</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <table class="data-table">
         <thead>
             <tr>
@@ -40,6 +77,16 @@
                     <td>${{ "%.2f"|format(product.price * product.daily_sales) }}</td>
                 </form>
             </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="no-products-message">
+                    {% if search_query %}
+                    No se encontraron productos que coincidan con "{{ search_query }}"
+                    {% else %}
+                    No hay productos disponibles en el inventario
+                    {% endif %}
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
         <tfoot>
@@ -63,31 +110,31 @@
 
     <div class="mt-4">
         <h3>Actividad Reciente</h3>
-        <div class="chatter-container" style="background: #f8fafc; border-radius: 8px; padding: 1.5rem; max-height: 400px; overflow-y: auto;">
+        <div class="chatter-container">
             {% for sale, user, product in chatter_activities %}
-            <div class="chatter-message" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0;">
-                <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                    <div style="width: 32px; height: 32px; background-color: #5D5FEF; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 0.75rem; font-weight: bold;">
+            <div class="chatter-message">
+                <div class="chatter-header">
+                    <div class="user-avatar">
                         {{ user.username[0]|upper }}
                     </div>
                     <div>
                         <strong>{{ user.username }}</strong>
-                        <span style="color: #718096; font-size: 0.875rem; margin-left: 0.5rem;">
+                        <span class="chatter-time">
                             {{ sale.date.strftime('%d/%m/%Y %H:%M') }}
                         </span>
                     </div>
                 </div>
-                <div style="padding-left: 2.75rem;">
-                    <p style="margin-bottom: 0.25rem;">
+                <div class="chatter-content">
+                    <p class="chatter-text">
                         Vendió <strong>{{ sale.quantity }} unidades</strong> de <strong>{{ product.name }}</strong>
                     </p>
-                    <p style="color: #4a5568;">
+                    <p class="chatter-details">
                         Total: <strong>${{ "%.2f"|format(sale.total) }}</strong> | Cliente: {{ sale.customer }}
                     </p>
                 </div>
             </div>
             {% else %}
-            <div style="text-align: center; color: #718096; padding: 2rem;">
+            <div class="no-activity-message">
                 No hay actividad registrada
             </div>
             {% endfor %}
@@ -116,5 +163,34 @@ function confirmReset() {
           });
     }
 }
+
+// Funcionalidad para el buscador con lupa
+document.addEventListener('DOMContentLoaded', function() {
+    const searchToggle = document.getElementById('searchToggle');
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('searchInput');
+    
+    // Alternar visibilidad del formulario de búsqueda
+    searchToggle.addEventListener('click', function() {
+        if (searchForm.style.display === 'none') {
+            searchForm.style.display = 'block';
+            searchInput.focus();
+        } else {
+            searchForm.style.display = 'none';
+        }
+    });
+    
+    // Cerrar el buscador al hacer clic fuera
+    document.addEventListener('click', function(event) {
+        if (!searchToggle.contains(event.target) && !searchForm.contains(event.target)) {
+            searchForm.style.display = 'none';
+        }
+    });
+    
+    // Prevenir que el clic en el formulario cierre el buscador
+    searchForm.addEventListener('click', function(event) {
+        event.stopPropagation();
+    });
+});
 </script>
 {% endblock %}
