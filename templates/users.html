@@ -3,52 +3,159 @@
 
 {% block content %}
 <div class="module-container">
-    <h2>Gestinar Usuarios</h2>
+    <h2>👥 Gestionar Usuarios</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Barra de búsqueda flotante -->
+    <div class="search-container">
+        <!-- Botón de lupa -->
+        <button type="button" id="searchToggle" class="btn btn-primary search-toggle">
+            🔍
+        </button>
+        
+        <!-- Formulario de búsqueda (oculto inicialmente) -->
+        <div id="searchForm" class="search-form">
+            <form method="GET" action="{{ url_for('users.users') }}" class="search-inline-form">
+                <input type="text" 
+                       name="search" 
+                       placeholder="Buscar usuario o rol..." 
+                       value="{{ search_query }}"
+                       class="search-input"
+                       id="searchInput">
+                <button type="submit" class="btn btn-primary btn-small">Buscar</button>
+                {% if search_query %}
+                <a href="{{ url_for('users.users') }}" class="btn btn-secondary btn-small">X</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Información de resultados -->
+    {% if search_query %}
+    <div class="alert alert-info search-results-info">
+        {% if users %}
+            Mostrando {{ users|length }} usuario(s) para "<strong>{{ search_query }}</strong>"
+            <a href="{{ url_for('users.users') }}" class="show-all-link">[Mostrar todos]</a>
+        {% else %}
+            No se encontraron usuarios para "<strong>{{ search_query }}</strong>"
+            <a href="{{ url_for('users.users') }}" class="show-all-link">[Mostrar todos]</a>
+        {% endif %}
+    </div>
+    {% endif %}
     
-    <div class="actions">
-        <form action="{{ url_for('users.users') }}" method="post" class="inline-form">
-            <input type="text" name="username" placeholder="Nombre de usuario" required>
-            <input type="password" name="password" placeholder="Contraseña" required>
-            <select name="role" required>
-                <option value="">Seleccione rol</option>
-                <option value="admin">Administrador</option>
-                <option value="dependiente">Dependiente</option>
-            </select>
-            <button type="submit" class="btn-primary">Crear Usuario</button>
+    <!-- Formulario para crear usuario -->
+    <div class="action-panel" style="margin-bottom: 2rem;">
+        <h3>➕ Crear Nuevo Usuario</h3>
+        <form action="{{ url_for('users.users') }}" method="post" class="user-form">
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="username">Nombre de Usuario</label>
+                    <input type="text" id="username" name="username" placeholder="Ej: juan_perez" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" placeholder="Mínimo 6 caracteres" required minlength="6">
+                </div>
+                
+                <div class="form-group">
+                    <label for="role">Rol</label>
+                    <select id="role" name="role" required>
+                        <option value="">Seleccionar rol</option>
+                        <option value="admin">Administrador</option>
+                        <option value="dependiente">Dependiente</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        👤 Crear Usuario
+                    </button>
+                </div>
+            </div>
         </form>
     </div>
     
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Usuario</th>
-                <th>Rol</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
+    <!-- Lista de usuarios -->
+    <div class="users-section">
+        <div class="section-header">
+            <h3>📋 Lista de Usuarios</h3>
+            <div class="export-actions">
+                <span class="text-muted">{{ users|length }} usuario(s) en total</span>
+            </div>
+        </div>
+
+        {% if users %}
+        <div class="users-grid">
             {% for user in users %}
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.username }}</td>
-                <td>{{ user.role }}</td>
-                <td>
-                    {% if user.id != session['user_id'] %}
-                    <a href="#" 
-                       class="btn-small btn-danger delete-user-btn" 
-                       data-user-id="{{ user.id }}" 
-                       data-user-name="{{ user.username }}">
-                        Eliminar
-                    </a>
-                    {% else %}
-                    <span class="text-muted">Usuario actual</span>
-                    {% endif %}
-                </td>
-            </tr>
+            <div class="user-card">
+                <div class="user-header">
+                    <div class="user-info">
+                        <h4>{{ user.username }}</h4>
+                        <div class="user-meta">
+                            <span>ID: <strong>{{ user.id }}</strong></span>
+                            <span>Rol: 
+                                <span class="role-badge {{ user.role }}">
+                                    {{ user.role|title }}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="user-status">
+                        {% if user.id == session['user_id'] %}
+                        <span class="current-user-badge">
+                            👤 Tú
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="user-footer">
+                    <div class="user-actions">
+                        {% if user.id != session['user_id'] %}
+                        <button type="button" class="btn-delete-user delete-user-btn" 
+                                data-user-id="{{ user.id }}" 
+                                data-user-name="{{ user.username }}">
+                            🗑️ Eliminar Usuario
+                        </button>
+                        {% else %}
+                        <span class="text-muted">
+                            No puedes eliminar tu propio usuario
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
+        {% else %}
+        <div class="empty-state-users">
+            <div class="empty-state-users-icon">👥</div>
+            <h4>
+                {% if search_query %}
+                No se encontraron usuarios para "{{ search_query }}"
+                {% else %}
+                No hay usuarios en el sistema
+                {% endif %}
+            </h4>
+            <p>
+                {% if search_query %}
+                Intenta con otros términos de búsqueda o <a href="{{ url_for('users.users') }}">muestra todos los usuarios</a>.
+                {% else %}
+                Comienza creando tu primer usuario usando el formulario superior.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
 </div>
 
 <!-- Modal de confirmación personalizado -->
@@ -111,6 +218,40 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Escape' && modal.style.display === 'block') {
             modal.style.display = 'none';
             deleteUrl = '';
+        }
+    });
+
+    // Funcionalidad para el buscador con lupa
+    const searchToggle = document.getElementById('searchToggle');
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('searchInput');
+    
+    // Alternar visibilidad del formulario de búsqueda
+    searchToggle.addEventListener('click', function() {
+        if (searchForm.style.display === 'none' || !searchForm.style.display) {
+            searchForm.style.display = 'block';
+            searchInput.focus();
+        } else {
+            searchForm.style.display = 'none';
+        }
+    });
+    
+    // Cerrar el buscador al hacer clic fuera
+    document.addEventListener('click', function(event) {
+        if (!searchToggle.contains(event.target) && !searchForm.contains(event.target)) {
+            searchForm.style.display = 'none';
+        }
+    });
+    
+    // Prevenir que el clic en el formulario cierre el buscador
+    searchForm.addEventListener('click', function(event) {
+        event.stopPropagation();
+    });
+
+    // Cerrar con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && searchForm.style.display === 'block') {
+            searchForm.style.display = 'none';
         }
     });
 });

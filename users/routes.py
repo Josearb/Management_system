@@ -27,8 +27,21 @@ def users():
                 flash(f'Error al crear usuario: {str(e)}', 'danger')
         return redirect(url_for('users.users'))
     
-    users = User.query.order_by(User.role, User.username).all()
-    return render_template('users.html', users=users)
+    # Obtener parámetro de búsqueda
+    search_query = request.args.get('search', '').strip()
+    
+    if search_query:
+        # Filtrar usuarios por nombre de usuario o rol (búsqueda case-insensitive)
+        users = User.query.filter(
+            User.username.ilike(f'%{search_query}%') |
+            User.role.ilike(f'%{search_query}%')
+        ).order_by(User.role, User.username).all()
+    else:
+        users = User.query.order_by(User.role, User.username).all()
+    
+    return render_template('users.html', 
+                         users=users, 
+                         search_query=search_query)
 
 @users_bp.route('/users/delete/<int:user_id>')
 @login_required
