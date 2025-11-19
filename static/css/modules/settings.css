@@ -1,0 +1,89 @@
+/* ===== MÓDULO DE AJUSTES ===== */
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.settings-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    border: 1px solid #E2E8F0;
+}
+
+.settings-section h3 {
+    color: var(--dark-color);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #EDF2F7;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.settings-section h4 {
+    color: var(--dark-color);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.password-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #EDF2F7;
+}
+
+/* Información del Sistema */
+.system-info {
+    margin-top: 3rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: var(--border-radius);
+    border: 1px solid #E2E8F0;
+}
+
+.system-info h3 {
+    color: var(--dark-color);
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    padding: 0.75rem;
+    background: white;
+    border-radius: var(--border-radius);
+    border: 1px solid #E2E8F0;
+    font-size: 0.95rem;
+}
+
+/* Responsive para ajustes */
+@media (max-width: 768px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-section {
+        padding: 1rem;
+    }
+    
+    .system-info {
+        padding: 1rem;
+    }
+}

@@ -1,9 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Ventas Diarias{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/sales.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="module-container">
-    <h2>Vender Productos- {{ current_date }}</h2>
+    <h2>🛒 Vender Productos - {{ current_date }}</h2>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -92,24 +96,24 @@
         <tfoot>
             <tr>
                 <td colspan="4"></td>
-                <th>Total del Turno:</th>
-                <td><strong>${{ "%.2f"|format(today_total) }}</strong></td>
+                <!-- <th>Total del Turno:</th>
+                <td><strong>${{ "%.2f"|format(today_total) }}</strong></td> -->
             </tr>
         </tfoot>
     </table>
 
     <div class="actions" style="margin-top: 30px;">
         <a href="{{ url_for('sales.print_daily_report') }}" class="btn btn-secondary" target="_blank">
-            Generar Reporte
+            📄 Generar Reporte
         </a>
 
         <button type="button" onclick="confirmReset()" class="btn btn-warning">
-            Reiniciar Contadores
+            🔄 Reiniciar Contadores
         </button>
     </div>
 
     <div class="mt-4">
-        <h3>Actividad Reciente</h3>
+        <h3>📋 Actividad Reciente</h3>
         <div class="chatter-container">
             {% for sale, user, product in chatter_activities %}
             <div class="chatter-message">

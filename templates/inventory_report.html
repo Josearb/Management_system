@@ -1,14 +1,39 @@
 {% extends "base.html" %}
 {% block title %}Reporte de Inventario{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/reports.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="module-container">
-    <h2>📄 Reporte de Inventario - {{ date }}</h2>
+    <div class="report-header">
+        <h2>📄 Reporte de Inventario - {{ date }}</h2>
+    </div>
 
-    <table class="data-table">
+    {% if products %}
+    <div class="report-summary">
+        <h3>Resumen del Inventario</h3>
+        <div class="report-totals">
+            <div class="total-card">
+                <div>Total de Productos</div>
+                <div>{{ products|length }}</div>
+            </div>
+            <div class="total-card">
+                <div>Stock Total</div>
+                <div>{{ total_products }}</div>
+            </div>
+            <div class="total-card">
+                <div>Valor Total</div>
+                <div>${{ "%.2f"|format(total_value) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <table class="report-table">
         <thead>
             <tr>
-                <th>Código de Inventario</th>
+                <th>#</th>
                 <th>Producto</th>
                 <th>Cantidad en Stock</th>
                 <th>Unidad de Medida</th>
@@ -37,8 +62,15 @@
             </tr>
         </tfoot>
     </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📦</div>
+        <h4>No hay productos en el inventario</h4>
+        <p>El inventario se encuentra vacío.</p>
+    </div>
+    {% endif %}
 
-    <div class="no-print" style="margin-top: 20px;">
+    <div class="report-actions no-print">
         <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir</button>
         <a href="{{ url_for('inventory.download_inventory_pdf') }}" class="btn btn-info">📥 Descargar PDF</a>
         <a href="{{ url_for('inventory.inventory') }}" class="btn btn-secondary">← Volver a Inventario</a>

@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Registro de Caja{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/cash_register.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="module-container">
     <h2>💰 Registro de Caja</h2>
@@ -156,7 +160,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mostrar formulario al hacer clic en "Agregar"
     showFormBtn.addEventListener('click', function() {
         registerForm.style.display = 'block';
-        registerForm.classList.add('fade-in');
         showFormBtn.style.display = 'none';
         transferInput.focus();
     });
@@ -208,8 +211,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Mostrar modal de confirmación
         confirmTitle.textContent = '💾 Confirmar Registro';
-        confirmTitle.style.color = 'var(--success-color)';
-        confirmModal.querySelector('.confirm-modal-content').style.borderTopColor = 'var(--success-color)';
         confirmMessage.textContent = `¿Está seguro de que desea guardar este registro?\n\n• Transferencia: $${transfer.toFixed(2)}\n• Efectivo: $${cash.toFixed(2)}\n• Total: $${total.toFixed(2)}`;
         confirmBtn.textContent = 'Guardar';
         confirmBtn.className = 'btn btn-success';
@@ -228,8 +229,6 @@ document.addEventListener('DOMContentLoaded', function() {
             deleteUrl = "{{ url_for('cash_register.delete_cash_register', register_id=0) }}".replace('0', registerId);
             
             confirmTitle.textContent = '🗑️ Eliminar Registro';
-            confirmTitle.style.color = 'var(--danger-color)';
-            confirmModal.querySelector('.confirm-modal-content').style.borderTopColor = 'var(--danger-color)';
             confirmMessage.textContent = `¿Está seguro de que desea eliminar este registro?\n\n• Fecha: ${registerDate}\n• Monto: ${registerAmount}\n\n⚠️ Esta acción no se puede deshacer.`;
             confirmBtn.textContent = 'Eliminar';
             confirmBtn.className = 'btn btn-danger';

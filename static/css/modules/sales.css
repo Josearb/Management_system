@@ -1,0 +1,89 @@
+/* Estilos específicos para el módulo de ventas */
+.sales-container {
+    padding: 1.5rem;
+  }
+  
+  .quantity-input {
+    width: 80px;
+    padding: 0.5rem;
+    border: 1px solid #CBD5E0;
+    border-radius: var(--border-radius);
+    text-align: center;
+    font-size: 0.95rem;
+  }
+  
+  .subtotal-cell {
+    font-weight: 600;
+    color: var(--dark-color);
+  }
+  
+  #grand-total {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1.25rem;
+  }
+  
+  .sales-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+  }
+  
+  /* Estilos para el chatter de ventas */
+  .chatter-container {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
+  .chatter-message {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .chatter-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    font-weight: bold;
+  }
+  
+  .chatter-time {
+    color: #718096;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+  }
+  
+  .chatter-content {
+    padding-left: 2.75rem;
+  }
+  
+  .chatter-text {
+    margin-bottom: 0.25rem;
+  }
+  
+  .chatter-details {
+    color: #4a5568;
+  }
+  
+  .no-activity-message {
+    text-align: center;
+    color: #718096;
+    padding: 2rem;
+  }

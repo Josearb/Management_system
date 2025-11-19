@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Inventario{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/inventory.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="module-container">
     <div class="inventory-header">
-        <h2>📦 Gestinar Inventario</h2>
+        <h2>📦 Gestionar Inventario</h2>
         <div class="header-stats">
             <div class="stat-card">
                 <div>Total Productos</div>

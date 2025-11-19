@@ -1,0 +1,132 @@
+/* ===== ESTILOS PARA EL BUSCADOR CON LUPA ===== */
+
+/* Contenedor del buscador */
+.search-container {
+    position: relative;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  /* Botón de lupa */
+  .search-toggle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 10;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+  }
+  
+  .search-toggle:hover {
+    transform: scale(1.1);
+    background-color: var(--primary-hover);
+  }
+  
+  /* Formulario de búsqueda */
+  .search-form {
+    display: none;
+    position: absolute;
+    right: 60px;
+    top: 0;
+    background: white;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    border: 1px solid #CBD5E0;
+    z-index: 9;
+    min-width: 300px;
+  }
+  
+  /* Formulario inline dentro del buscador */
+  .search-inline-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin: 0;
+  }
+  
+  /* Input de búsqueda */
+  .search-input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #CBD5E0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: var(--transition);
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(93, 95, 239, 0.2);
+  }
+  
+  /* Información de resultados de búsqueda */
+  .search-results-info {
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.5rem;
+  }
+  
+  .show-all-link {
+    margin-left: 10px;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    text-decoration: none;
+  }
+  
+  .show-all-link:hover {
+    text-decoration: underline;
+  }
+  
+  /* Mensajes de productos no encontrados */
+  .no-products-message {
+    text-align: center;
+    padding: 2rem;
+    color: var(--gray-color);
+  }
+  
+  /* Responsive para el buscador */
+  @media (max-width: 768px) {
+    .search-form {
+        position: fixed !important;
+        left: 1rem;
+        right: 1rem;
+        top: 120px;
+        min-width: auto !important;
+    }
+    
+    .search-toggle {
+        position: fixed !important;
+        top: 120px;
+        right: 1rem;
+    }
+    
+    .search-inline-form {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .search-input {
+        width: 100%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .search-form {
+        left: 0.5rem;
+        right: 0.5rem;
+        top: 110px;
+    }
+    
+    .search-toggle {
+        top: 110px;
+        right: 0.5rem;
+    }
+  }

@@ -1,0 +1,56 @@
+/* ===== ESTILOS PARA REGISTRO DE CAJA ===== */
+
+/* Contenedor del formulario */
+.form-section {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+    border: 2px dashed #cbd5e0;
+    transition: var(--transition);
+  }
+  
+  .form-section:hover {
+    border-color: var(--primary-color);
+  }
+  
+  /* Vista previa del total */
+  .total-preview {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #e8f5e8;
+    border-radius: 4px;
+    display: none;
+  }
+  
+  .total-amount {
+    color: var(--success-color);
+    font-weight: bold;
+  }
+  
+  /* Botón eliminar registro */
+  .btn-delete-register {
+    padding: 0.4rem 0.8rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 4px;
+    color: var(--danger-color);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .btn-delete-register:hover {
+    background: #fecaca;
+    transform: translateY(-1px);
+  }
+  
+  .form-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+  }

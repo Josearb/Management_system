@@ -1,0 +1,59 @@
+/* ===== MÓDULO CRM ===== */
+
+/* Estilos específicos para el módulo CRM */
+.crm-form {
+    margin-bottom: 2rem;
+}
+
+.customer-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.customer-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    transition: var(--transition);
+}
+
+.customer-card:hover {
+    box-shadow: var(--box-shadow);
+    transform: translateY(-2px);
+}
+
+.customer-info h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--dark-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.customer-contact {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--gray-color);
+    flex-wrap: wrap;
+}
+
+.customer-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Responsive para CRM */
+@media (max-width: 768px) {
+    .customer-contact {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .customer-actions {
+        justify-content: center;
+    }
+}

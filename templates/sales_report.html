@@ -1,57 +1,71 @@
 {% extends "base.html" %}
-{% block title %}Reporte de Caja{% endblock %}
+{% block title %}Reporte de Ventas{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/reports.css') }}">
+{% endblock %}
 
 {% block content %}
 <div class="module-container">
-    <h2>📄 Reporte Completo de Caja - {{ date }}</h2>
+    <div class="report-header">
+        <h2>📄 Reporte de Ventas Diarias - {{ date }}</h2>
+    </div>
 
-    {% if records %}
-    <table class="data-table">
+    {% if products %}
+    <div class="report-summary">
+        <h3>Resumen de Ventas</h3>
+        <div class="report-totals">
+            <div class="total-card">
+                <div>Total Productos Vendidos</div>
+                <div>{{ products|sum(attribute='daily_sales') }}</div>
+            </div>
+            <div class="total-card">
+                <div>Ingresos Totales</div>
+                <div>${{ "%.2f"|format(total) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <table class="report-table">
         <thead>
             <tr>
                 <th>#</th>
-                <th>Fecha</th>
-                <th>Hora</th>
-                <th>Transferencia</th>
-                <th>Efectivo</th>
-                <th>Total</th>
-                <th>Usuario</th>
+                <th>Producto</th>
+                <th>Cantidad Vendida</th>
+                <th>Precio Unitario</th>
+                <th>Subtotal</th>
             </tr>
         </thead>
         <tbody>
-            {% for record in records %}
+            {% for product in products %}
             <tr>
                 <td>{{ loop.index }}</td>
-                <td>{{ record.date.strftime('%d/%m/%Y') }}</td>
-                <td>{{ record.date.strftime('%H:%M') }}</td>
-                <td>${{ "%.2f"|format(record.transfer_amount) }}</td>
-                <td>${{ "%.2f"|format(record.cash_amount) }}</td>
-                <td>${{ "%.2f"|format(record.total_amount) }}</td>
-                <td>{{ record.user.username }}</td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.daily_sales }}</td>
+                <td>${{ "%.2f"|format(product.price) }}</td>
+                <td>${{ "%.2f"|format(product.price * product.daily_sales) }}</td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot>
-            <tr style="background-color: #f8f9fa;">
-                <td colspan="3" style="text-align: right;"><strong>Totales:</strong></td>
-                <td><strong>${{ "%.2f"|format(total_transfer) }}</strong></td>
-                <td><strong>${{ "%.2f"|format(total_cash) }}</strong></td>
-                <td><strong>${{ "%.2f"|format(grand_total) }}</strong></td>
-                <td></td>
+            <tr>
+                <td colspan="4" style="text-align: right;"><strong>Total General:</strong></td>
+                <td><strong>${{ "%.2f"|format(total) }}</strong></td>
             </tr>
         </tfoot>
     </table>
     {% else %}
-    <div style="text-align: center; padding: 3rem; background: #f8fafc; border-radius: 8px;">
-        <h3 style="color: var(--gray-color);">No hay registros de caja</h3>
-        <p>No se han encontrado registros de caja para mostrar en el reporte.</p>
+    <div class="empty-state">
+        <div class="empty-state-icon">📊</div>
+        <h4>No hay ventas registradas para hoy</h4>
+        <p>No se han realizado ventas en el día de hoy.</p>
     </div>
     {% endif %}
 
-    <div class="no-print" style="margin-top: 20px;">
+    <div class="report-actions no-print">
         <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir Reporte</button>
-        <a href="{{ url_for('cash_register.download_cash_register_pdf') }}" class="btn btn-info">📥 Descargar PDF</a>
-        <a href="{{ url_for('cash_register.cash_register') }}" class="btn btn-secondary">← Volver a Caja</a>
+        <a href="{{ url_for('sales.download_sales_pdf') }}" class="btn btn-info">📥 Descargar PDF</a>
+        <a href="{{ url_for('sales.sales') }}" class="btn btn-secondary">← Volver a Ventas</a>
     </div>
 </div>
 {% endblock %}

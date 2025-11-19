@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Gestión de Usuarios{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/users.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="module-container">
     <h2>👥 Gestionar Usuarios</h2>
