@@ -46,10 +46,10 @@ def inject_settings():
     from models import SystemSettings
     try:
         settings = SystemSettings.get_settings()
-        return dict(settings=settings)
+        return dict(settings=settings, show_cash_register=False)  # ← Valor por defecto
     except:
         # Si hay algún error (tabla no existe, etc.), retornar valores por defecto
-        return dict(settings=None)
+        return dict(settings=None, show_cash_register=False)  # ← Valor por defecto
 
 # Función para obtener settings en las rutas
 def get_system_settings():
@@ -82,7 +82,7 @@ def dashboard():
             {'name': 'Ajustes', 'icon': 'images/icons8-ajustes-100.png', 'description': 'Configuración del sistema', 'route': 'settings.settings'}
         ]
     
-    return render_template('dashboard.html', modules=modules)
+    return render_template('dashboard/dashboard.html', modules=modules)
 
 if __name__ == '__main__':
     app.run(debug=True)

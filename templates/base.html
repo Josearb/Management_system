@@ -12,25 +12,41 @@
 <body>
     <header class="header-max">
         <div class="nav-extreme">
-            <h1 class="logo-edge">
-                <img src="{{ url_for('static', filename=settings.icon_filename if settings and settings.icon_filename else 'images/icons8-circulacion-de-dinero-100.png') }}"
-                     alt="Logo"
-                     style="height: 48px; vertical-align: middle; margin-right: 12px;">
-                <span class="logo-text">
-                    {% if settings and settings.company_name %}
-                        {% if "Sistema de Gestión de Ventas" in settings.company_name %}
-                            Sistema de Gestión de Ventas <strong>{{ settings.company_name.replace('Sistema de Gestión de Ventas', '').strip() }}</strong>
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <a href="{{ url_for('dashboard') }}" class="logo-edge" style="text-decoration: none;">
+                    <img src="{{ url_for('static', filename=settings.icon_filename if settings and settings.icon_filename else 'images/icons8-circulacion-de-dinero-100.png') }}"
+                         alt="Logo"
+                         style="height: 48px; vertical-align: middle; margin-right: 12px;">
+                    <span class="logo-text">
+                        {% if settings and settings.company_name %}
+                            {% if "Sistema de Gestión de Ventas" in settings.company_name %}
+                                Sistema de Gestión de Ventas <strong>{{ settings.company_name.replace('Sistema de Gestión de Ventas', '').strip() }}</strong>
+                            {% else %}
+                                <strong>{{ settings.company_name }}</strong>
+                            {% endif %}
                         {% else %}
-                            <strong>{{ settings.company_name }}</strong>
+                            <strong>Tradyx</strong>
                         {% endif %}
-                    {% else %}
-                        <strong>Tradyx</strong>
-                    {% endif %}
-                </span>
-            </h1>
+                    </span>
+                </a>
+                
+                {% if show_cash_register is defined and show_cash_register %}
+                <div class="nav-dropdown">
+                    <button onclick="toggleOperations()" class="nav-item dropdown-btn">
+                        Operaciones ▼
+                    </button>
+                    <div id="myDropdown" class="dropdown-content">
+                        <a href="{{ url_for('cash_register.cash_register') }}">
+                            Registro de Caja
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
             
             <nav class="nav-edge">
                 <a href="{{ url_for('dashboard') }}" class="nav-item">Inicio</a>
+                
                 {% if 'user_id' in session %}
                 <div class="user-edge">
                     <a href="{{ url_for('auth.logout') }}" class="logout-edge">
@@ -39,7 +55,7 @@
                             <polyline points="16 17 21 12 16 7"></polyline>
                             <line x1="21" y1="12" x2="9" y2="12"></line>
                         </svg>
-                        Cerrar sesión
+                        <span style="margin-left: 5px;">Cerrar sesión</span>
                     </a>
                 </div>
                 {% endif %}
@@ -65,5 +81,26 @@
             - Sistema de Gestión
         </p>
     </footer>
+
+    <script>
+        /* Cuando el usuario hace clic en el botón, alterna la visibilidad */
+        function toggleOperations() {
+            document.getElementById("myDropdown").classList.toggle("show");
+        }
+
+        /* Cierra el menú si el usuario hace clic fuera de él */
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropdown-btn')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                var i;
+                for (i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+    </script>
 </body>
 </html>

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}CRM{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/crm.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="module-container">
+    <h2>👥 Módulo de CRM</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="actions">
+        <form action="{{ url_for('crm.crm') }}" method="post" class="inline-form crm-form">
+            <input type="text" name="name" placeholder="Nombre" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="tel" name="phone" placeholder="Teléfono" required>
+            <button type="submit" class="btn btn-primary">➕ Agregar Cliente</button>
+        </form>
+    </div>
+    
+    <div class="customer-grid">
+        {% for customer in customers %}
+        <div class="customer-card">
+            <div class="customer-info">
+                <h4>{{ customer.name }}</h4>
+                <div class="customer-contact">
+                    <span>📧 {{ customer.email }}</span>
+                    <span>📞 {{ customer.phone }}</span>
+                </div>
+            </div>
+            <div class="customer-actions">
+                <form action="{{ url_for('crm.update_customer', customer_id=customer.id) }}" method="post" class="inline-form">
+                    <input type="text" name="name" value="{{ customer.name }}" required>
+                    <input type="email" name="email" value="{{ customer.email }}" required>
+                    <input type="tel" name="phone" value="{{ customer.phone }}" required>
+                    <button type="submit" class="btn btn-small">✏️ Actualizar</button>
+                </form>
+                <button type="button" class="btn btn-small btn-danger delete-customer-btn" 
+                        data-customer-id="{{ customer.id }}" 
+                        data-customer-name="{{ customer.name }}">
+                    🗑️ Eliminar
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal de confirmación personalizado -->
+<div id="confirmModal" class="confirm-modal">
+    <div class="confirm-modal-content">
+        <h3>⚠️ Confirmar Eliminación</h3>
+        <p id="confirmMessage"></p>
+        <div class="confirm-modal-buttons">
+            <button id="cancelBtn" class="btn btn-secondary">Cancelar</button>
+            <button id="confirmBtn" class="btn btn-danger">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('confirmModal');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+    let deleteUrl = '';
+
+    // Agregar event listeners a todos los botones de eliminar
+    document.querySelectorAll('.delete-customer-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const customerName = this.getAttribute('data-customer-name');
+            const customerId = this.getAttribute('data-customer-id');
+            
+            deleteUrl = "{{ url_for('crm.delete_customer', customer_id=0) }}".replace('0', customerId);
+            confirmMessage.textContent = `¿Está seguro de que desea eliminar al cliente "${customerName}"?\n\nEsta acción eliminará permanentemente al cliente del sistema.\n\n⚠️ Esta acción no se puede deshacer.`;
+            
+            modal.style.display = 'block';
+        });
+    });
+
+    // Botón Cancelar
+    cancelBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+        deleteUrl = '';
+    });
+
+    // Botón Confirmar
+    confirmBtn.addEventListener('click', function() {
+        if (deleteUrl) {
+            // Crear formulario dinámico para enviar la solicitud POST
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = deleteUrl;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+
+    // Cerrar modal haciendo clic fuera del contenido
+    window.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            deleteUrl = '';
+        }
+    });
+
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'block') {
+            modal.style.display = 'none';
+            deleteUrl = '';
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+{% block title %}Inventario{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/inventory.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="module-container">
+    <div class="inventory-header">
+        <h2>📦 Gestionar Inventario</h2>
+        <div class="header-stats">
+            <div class="stat-card">
+                <div>Total Productos</div>
+                <div>{{ products|length }}</div>
+            </div>
+            <div class="stat-card">
+                <div>Stock Total</div>
+                <div>{{ products|sum(attribute='quantity') }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Barra de búsqueda flotante -->
+    <div class="search-container">
+        <!-- Botón de lupa -->
+        <button type="button" id="searchToggle" class="btn btn-primary search-toggle">
+            🔍
+        </button>
+        
+        <!-- Formulario de búsqueda (oculto inicialmente) -->
+        <div id="searchForm" class="search-form">
+            <form method="GET" action="{{ url_for('inventory.inventory') }}" class="search-inline-form">
+                <input type="text" 
+                       name="search" 
+                       placeholder="Buscar producto..." 
+                       value="{{ search_query }}"
+                       class="search-input"
+                       id="searchInput">
+                <button type="submit" class="btn btn-primary btn-small">Buscar</button>
+                {% if search_query %}
+                <a href="{{ url_for('inventory.inventory') }}" class="btn btn-secondary btn-small">X</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Información de resultados -->
+    {% if search_query %}
+    <div class="alert alert-info search-results-info">
+        {% if products %}
+            Mostrando {{ products|length }} producto(s) para "<strong>{{ search_query }}</strong>"
+            <a href="{{ url_for('inventory.inventory') }}" class="show-all-link">[Mostrar todos]</a>
+        {% else %}
+            No se encontraron productos para "<strong>{{ search_query }}</strong>"
+            <a href="{{ url_for('inventory.inventory') }}" class="show-all-link">[Mostrar todos]</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Panel de Acciones Principales -->
+    {% if session['role'] == 'admin' %}
+    <div class="action-panel">
+        <h3>➕ Agregar Nuevo Producto</h3>
+        <form action="{{ url_for('inventory.inventory') }}" method="post" class="product-form">
+            <div class="product-form-grid">
+                <div class="form-group">
+                    <label for="name">Nombre del Producto</label>
+                    <input type="text" id="name" name="name" placeholder="Ej: Arroz Integral" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantity">Cantidad</label>
+                    <input type="number" id="quantity" name="quantity" placeholder="0" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="price">Precio Unitario</label>
+                    <input type="number" step="0.01" id="price" name="price" placeholder="0.00" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="unit_measure">Unidad de Medida</label>
+                    <select id="unit_measure" name="unit_measure" required>
+                        <option value="">Seleccionar</option>
+                        <option value="unidades">Unidades</option>
+                        <option value="kg">Kilogramos</option>
+                        <option value="g">Gramos</option>
+                        <option value="litros">Litros</option>
+                        <option value="cajas">Cajas</option>
+                        <option value="paquetes">Paquetes</option>
+                        <option value="botellas">Botellas</option>
+                        <option value="sobres">Sobres</option>
+                        <option value="bolsas">Bolsas</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    Agregar Producto
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Lista de Productos -->
+    <div class="products-section">
+        <div class="section-header">
+            <h3>📋 Lista de Productos</h3>
+            <div class="export-actions">
+                <a href="{{ url_for('inventory.print_inventory_report') }}" class="btn btn-secondary" target="_blank">
+                    📄 Generar Reporte
+                </a>
+                <a href="{{ url_for('inventory.download_inventory_pdf') }}" class="btn btn-info">
+                    📥 Descargar PDF
+                </a>
+            </div>
+        </div>
+
+        {% if products %}
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="product-info">
+                        <h4>{{ product.name }}</h4>
+                        <div class="product-meta">
+                            <span>ID: <strong>{{ product.id }}</strong></span>
+                            <span>Unidad: <strong>{{ product.unit_measure }}</strong></span>
+                        </div>
+                    </div>
+                    <div class="product-price">
+                        <div class="price-main">${{ "%.2f"|format(product.price) }}</div>
+                        <div class="price-unit">por unidad</div>
+                    </div>
+                </div>
+
+                <div class="product-footer">
+                    <div class="stock-info">
+                        <div class="stock-indicator">
+                            <div class="stock-dot {% if product.quantity > 10 %}high{% elif product.quantity > 0 %}medium{% else %}low{% endif %}"></div>
+                            <span class="stock-quantity">Stock disponible: <strong>{{ product.quantity }}</strong></span>
+                        </div>
+                        {% if product.quantity <= 10 and product.quantity > 0 %}
+                        <div class="stock-warning">⚠️ Stock bajo - Reabastecer pronto</div>
+                        {% elif product.quantity == 0 %}
+                        <div class="stock-critical">❌ Sin stock - Producto agotado</div>
+                        {% endif %}
+                    </div>
+
+                    {% if session['role'] == 'admin' %}
+                    <div class="product-actions">
+                        <button type="button" class="btn-edit" onclick="toggleEditForm({{ product.id }})">
+                            ✏️ Editar
+                        </button>
+                        <button type="button" class="btn-delete delete-product-btn" 
+                                data-product-id="{{ product.id }}" 
+                                data-product-name="{{ product.name }}">
+                            🗑️ Eliminar
+                        </button>
+                    </div>
+                    {% else %}
+                    <span class="text-muted">Solo lectura</span>
+                    {% endif %}
+                </div>
+
+                <!-- Formulario de Edición (Oculto por defecto) -->
+                {% if session['role'] == 'admin' %}
+                <div id="edit-form-{{ product.id }}" class="edit-form">
+                    <form action="{{ url_for('inventory.update_product', product_id=product.id) }}" method="post" class="edit-product-form">
+                        <div class="edit-form-grid">
+                            <div class="form-group">
+                                <label>Nombre del Producto</label>
+                                <input type="text" name="name" value="{{ product.name }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Cantidad en Stock</label>
+                                <input type="number" name="quantity" value="{{ product.quantity }}" min="0" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Precio Unitario</label>
+                                <input type="number" step="0.01" name="price" value="{{ product.price }}" min="0" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Unidad de Medida</label>
+                                <select name="unit_measure" required>
+                                    <option value="unidades" {% if product.unit_measure == 'unidades' %}selected{% endif %}>Unidades</option>
+                                    <option value="kg" {% if product.unit_measure == 'kg' %}selected{% endif %}>Kilogramos</option>
+                                    <option value="g" {% if product.unit_measure == 'g' %}selected{% endif %}>Gramos</option>
+                                    <option value="litros" {% if product.unit_measure == 'litros' %}selected{% endif %}>Litros</option>
+                                    <option value="cajas" {% if product.unit_measure == 'cajas' %}selected{% endif %}>Cajas</option>
+                                    <option value="paquetes" {% if product.unit_measure == 'paquetes' %}selected{% endif %}>Paquetes</option>
+                                    <option value="botellas" {% if product.unit_measure == 'botellas' %}selected{% endif %}>Botellas</option>
+                                    <option value="sobres" {% if product.unit_measure == 'sobres' %}selected{% endif %}>Sobres</option>
+                                    <option value="bolsas" {% if product.unit_measure == 'bolsas' %}selected{% endif %}>Bolsas</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn-save">
+                                    💾 Guardar
+                                </button>
+                                <button type="button" class="btn-cancel" onclick="toggleEditForm({{ product.id }})">
+                                    ❌ Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📦</div>
+            <h4>
+                {% if search_query %}
+                No se encontraron productos para "{{ search_query }}"
+                {% else %}
+                No hay productos en el inventario
+                {% endif %}
+            </h4>
+            <p>
+                {% if search_query %}
+                Intenta con otros términos de búsqueda o <a href="{{ url_for('inventory.inventory') }}">muestra todos los productos</a>.
+                {% else %}
+                Comienza agregando tu primer producto usando el formulario superior.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de confirmación personalizado -->
+<div id="confirmModal" class="confirm-modal">
+    <div class="confirm-modal-content">
+        <h3>⚠️ Confirmar Eliminación</h3>
+        <p id="confirmMessage"></p>
+        <div class="confirm-modal-buttons">
+            <button id="cancelBtn" class="btn btn-secondary">Cancelar</button>
+            <button id="confirmBtn" class="btn btn-danger">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Función para mostrar/ocultar formulario de edición
+function toggleEditForm(productId) {
+    const editForm = document.getElementById(`edit-form-${productId}`);
+    if (editForm.style.display === 'none' || !editForm.style.display) {
+        editForm.style.display = 'block';
+    } else {
+        editForm.style.display = 'none';
+    }
+}
+
+// Modal de confirmación para eliminar
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('confirmModal');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+    let deleteUrl = '';
+
+    // Agregar event listeners a todos los botones de eliminar
+    document.querySelectorAll('.delete-product-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const productName = this.getAttribute('data-product-name');
+            const productId = this.getAttribute('data-product-id');
+            
+            deleteUrl = "{{ url_for('inventory.delete_product', product_id=0) }}".replace('0', productId);
+            confirmMessage.textContent = `¿Está seguro de que desea eliminar el producto "${productName}"?\n\nEsta acción eliminará permanentemente el producto y todas sus ventas asociadas.\n\n⚠️ Esta acción no se puede deshacer.`;
+            
+            modal.style.display = 'block';
+        });
+    });
+
+    // Botón Cancelar
+    cancelBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+        deleteUrl = '';
+    });
+
+    // Botón Confirmar
+    confirmBtn.addEventListener('click', function() {
+        if (deleteUrl) {
+            window.location.href = deleteUrl;
+        }
+    });
+
+    // Cerrar modal haciendo clic fuera del contenido
+    window.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            deleteUrl = '';
+        }
+    });
+
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'block') {
+            modal.style.display = 'none';
+            deleteUrl = '';
+        }
+    });
+
+    // Funcionalidad para el buscador con lupa
+    const searchToggle = document.getElementById('searchToggle');
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('searchInput');
+    
+    // Alternar visibilidad del formulario de búsqueda
+    searchToggle.addEventListener('click', function() {
+        if (searchForm.style.display === 'none') {
+            searchForm.style.display = 'block';
+            searchInput.focus();
+        } else {
+            searchForm.style.display = 'none';
+        }
+    });
+    
+    // Cerrar el buscador al hacer clic fuera
+    document.addEventListener('click', function(event) {
+        if (!searchToggle.contains(event.target) && !searchForm.contains(event.target)) {
+            searchForm.style.display = 'none';
+        }
+    });
+    
+    // Prevenir que el clic en el formulario cierre el buscador
+    searchForm.addEventListener('click', function(event) {
+        event.stopPropagation();
+    });
+});
+</script>
+{% endblock %}

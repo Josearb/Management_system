@@ -43,7 +43,7 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             flash('Usuario o contraseña incorrectos', 'danger')
-    return render_template('login.html')
+    return render_template('auth/login.html')
 
 @auth_bp.route('/logout')
 def logout():

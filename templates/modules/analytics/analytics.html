@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Analíticas{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/analytics.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="module-container">
+    <h2>📊 Administrar Ventas</h2>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <h3>Ingresos Totales</h3>
+            <p>${{ "%.2f"|format(total_sales) }}</p>
+        </div>
+        <div class="kpi-card">
+            <h3>Productos Más Vendidos</h3>
+            <ul>
+                {% for product in top_products %}
+                <li>{{ product.name }}: {{ product.total_sold }} unidades</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-grid">
+        <div class="chart-container">
+            <h3>Ventas Semanales</h3>
+            <canvas id="weeklyChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Ventas Mensuales</h3>
+            <canvas id="monthlyChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Gráfico semanal
+    const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+    new Chart(weeklyCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ weekly_data.labels | tojson | safe }},
+            datasets: [{
+                label: 'Ventas ($)',
+                data: {{ weekly_data.data | tojson | safe }},
+                backgroundColor: '#5D5FEF'
+            }]
+        }
+    });
+
+    // Gráfico mensual
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: {{ monthly_data.labels | tojson | safe }},
+            datasets: [{
+                label: 'Ventas ($)',
+                data: {{ monthly_data.data | tojson | safe }},
+                borderColor: '#5D5FEF',
+                tension: 0.3
+            }]
+        }
+    });
+</script>
+{% endblock %}

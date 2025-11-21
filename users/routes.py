@@ -39,7 +39,7 @@ def users():
     else:
         users = User.query.order_by(User.role, User.username).all()
     
-    return render_template('users.html', 
+    return render_template('modules/users/users.html', 
                          users=users, 
                          search_query=search_query)
 

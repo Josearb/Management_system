@@ -42,7 +42,7 @@ def inventory():
     else:
         products = Product.query.order_by(Product.name).all()
     
-    return render_template('inventory.html', 
+    return render_template('modules/inventory/inventory.html', 
                          products=products, 
                          search_query=search_query)
 
@@ -90,7 +90,7 @@ def print_inventory_report():
     total_products = sum(product.quantity for product in products)
     total_value = sum(product.price * product.quantity for product in products)
     
-    return render_template('inventory_report.html',
+    return render_template('reports/inventory/inventory_report.html',
                         products=products,
                         total_products=total_products,
                         total_value=total_value,

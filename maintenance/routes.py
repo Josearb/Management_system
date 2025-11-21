@@ -26,7 +26,7 @@ def maintenance():
         return redirect(url_for('maintenance.maintenance'))
     
     tasks = MaintenanceTask.query.order_by(MaintenanceTask.priority, MaintenanceTask.due_date).all()
-    return render_template('maintenance.html', tasks=tasks)
+    return render_template('modules/maintenance/maintenance.html', tasks=tasks)
 
 @maintenance_bp.route('/maintenance/update/<int:task_id>', methods=['POST'])
 @login_required
@@ -47,7 +47,7 @@ def update_task(task_id):
         flash(f'Error al actualizar tarea: {str(e)}', 'danger')
     return redirect(url_for('maintenance.maintenance'))
 
-@maintenance_bp.route('/maintenance/complete/<int:task_id>')
+@maintenance_bp.route('/maintenance/complete/<int:task_id>', methods=['POST'])
 @login_required
 @role_required('admin')
 def complete_task(task_id):
@@ -61,7 +61,7 @@ def complete_task(task_id):
         flash(f'Error al completar tarea: {str(e)}', 'danger')
     return redirect(url_for('maintenance.maintenance'))
 
-@maintenance_bp.route('/maintenance/delete/<int:task_id>')
+@maintenance_bp.route('/maintenance/delete/<int:task_id>', methods=['POST'])
 @login_required
 @role_required('admin')
 def delete_task(task_id):

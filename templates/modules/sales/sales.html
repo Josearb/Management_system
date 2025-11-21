@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block title %}Ventas Diarias{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/sales.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="module-container">
+    <h2>🛒 Vender Productos - {{ current_date }}</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Barra de búsqueda flotante -->
+    <div class="search-container">
+        <!-- Botón de lupa -->
+        <button type="button" id="searchToggle" class="btn btn-primary search-toggle">
+            🔍
+        </button>
+        
+        <!-- Formulario de búsqueda (oculto inicialmente) -->
+        <div id="searchForm" class="search-form">
+            <form method="GET" action="{{ url_for('sales.sales') }}" class="search-inline-form">
+                <input type="text" 
+                       name="search" 
+                       placeholder="Buscar producto..." 
+                       value="{{ search_query }}"
+                       class="search-input"
+                       id="searchInput">
+                <button type="submit" class="btn btn-primary btn-small">Buscar</button>
+                {% if search_query %}
+                <a href="{{ url_for('sales.sales') }}" class="btn btn-secondary btn-small">X</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Información de resultados -->
+    {% if search_query %}
+    <div class="alert alert-info search-results-info">
+        {% if products %}
+            Mostrando {{ products|length }} producto(s) para "<strong>{{ search_query }}</strong>"
+            <a href="{{ url_for('sales.sales') }}" class="show-all-link">[Mostrar todos]</a>
+        {% else %}
+            No se encontraron productos para "<strong>{{ search_query }}</strong>"
+            <a href="{{ url_for('sales.sales') }}" class="show-all-link">[Mostrar todos]</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Precio Unit.</th>
+                <th>Stock Disponible</th>
+                <th>Cant. Vendida Hoy</th>
+                <th>Vender</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <form action="{{ url_for('sales.sales') }}" method="post">
+                    <td>{{ product.name }}</td>
+                    <td>${{ "%.2f"|format(product.price) }}</td>
+                    <td>{{ product.quantity }}</td>
+                    <td>{{ product.daily_sales }}</td>
+                    <td>
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <input type="number" name="quantity" min="1" max="{{ product.quantity }}" required class="quantity-input">
+                        <button type="submit" class="btn btn-primary btn-small">Vender</button>
+                    </td>
+                    <td>${{ "%.2f"|format(product.price * product.daily_sales) }}</td>
+                </form>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="no-products-message">
+                    {% if search_query %}
+                    No se encontraron productos que coincidan con "{{ search_query }}"
+                    {% else %}
+                    No hay productos disponibles en el inventario
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4"></td>
+                <!-- <th>Total del Turno:</th>
+                <td><strong>${{ "%.2f"|format(today_total) }}</strong></td> -->
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="actions" style="margin-top: 30px;">
+        <a href="{{ url_for('sales.print_daily_report') }}" class="btn btn-secondary" target="_blank">
+            📄 Generar Reporte
+        </a>
+
+        <button type="button" id="resetCountersBtn" class="btn btn-warning">
+            🔄 Reiniciar Contadores
+        </button>
+    </div>
+
+    <div class="mt-4">
+        <h3>📋 Actividad Reciente</h3>
+        <div class="chatter-container">
+            {% for sale, user, product in chatter_activities %}
+            <div class="chatter-message">
+                <div class="chatter-header">
+                    <div class="user-avatar">
+                        {{ user.username[0]|upper }}
+                    </div>
+                    <div>
+                        <strong>{{ user.username }}</strong>
+                        <span class="chatter-time">
+                            {{ sale.date.strftime('%d/%m/%Y %H:%M') }}
+                        </span>
+                    </div>
+                </div>
+                <div class="chatter-content">
+                    <p class="chatter-text">
+                        Vendió <strong>{{ sale.quantity }} unidades</strong> de <strong>{{ product.name }}</strong>
+                    </p>
+                    <p class="chatter-details">
+                        Total: <strong>${{ "%.2f"|format(sale.total) }}</strong> | Cliente: {{ sale.customer }}
+                    </p>
+                </div>
+            </div>
+            {% else %}
+            <div class="no-activity-message">
+                No hay actividad registrada
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación personalizado -->
+<div id="confirmModal" class="confirm-modal">
+    <div class="confirm-modal-content">
+        <h3 id="confirmTitle">⚠️ Confirmar Reinicio</h3>
+        <p id="confirmMessage"></p>
+        <div class="confirm-modal-buttons">
+            <button id="cancelBtn" class="btn btn-secondary">Cancelar</button>
+            <button id="confirmBtn" class="btn btn-warning">Reiniciar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('confirmModal');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const resetCountersBtn = document.getElementById('resetCountersBtn');
+
+    // Botón de reinicio de contadores
+    resetCountersBtn.addEventListener('click', function() {
+        confirmTitle.textContent = '🔄 Confirmar Reinicio';
+        confirmMessage.textContent = '¿Está seguro de que desea reiniciar los contadores diarios y borrar el historial de ventas de hoy?\n\n⚠️ Esta acción:\n• Eliminará todas las ventas registradas hoy\n• Reiniciará los contadores de ventas diarias a cero\n• Creará un registro histórico del total del día\n\n⚠️ Esta acción no se puede deshacer.';
+        confirmBtn.textContent = 'Reiniciar';
+        confirmBtn.className = 'btn btn-warning';
+        
+        modal.style.display = 'block';
+    });
+
+    // Botón Cancelar del modal
+    cancelBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+
+    // Botón Confirmar del modal
+    confirmBtn.addEventListener('click', function() {
+        // Realizar la solicitud AJAX para reiniciar contadores
+        fetch("{{ url_for('sales.reset_daily_sales') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        }).then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  // Recargar la página para mostrar los cambios
+                  location.reload();
+              } else {
+                  alert('❌ Error: ' + data.message);
+              }
+          }).catch(error => {
+              alert('❌ Error de red: ' + error.message);
+          });
+        
+        modal.style.display = 'none';
+    });
+
+    // Cerrar modal haciendo clic fuera
+    window.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'block') {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Funcionalidad para el buscador con lupa
+    const searchToggle = document.getElementById('searchToggle');
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('searchInput');
+    
+    // Alternar visibilidad del formulario de búsqueda
+    searchToggle.addEventListener('click', function() {
+        if (searchForm.style.display === 'none') {
+            searchForm.style.display = 'block';
+            searchInput.focus();
+        } else {
+            searchForm.style.display = 'none';
+        }
+    });
+    
+    // Cerrar el buscador al hacer clic fuera
+    document.addEventListener('click', function(event) {
+        if (!searchToggle.contains(event.target) && !searchForm.contains(event.target)) {
+            searchForm.style.display = 'none';
+        }
+    });
+    
+    // Prevenir que el clic en el formulario cierre el buscador
+    searchForm.addEventListener('click', function(event) {
+        event.stopPropagation();
+    });
+});
+</script>
+{% endblock %}

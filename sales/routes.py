@@ -78,12 +78,13 @@ def sales():
         db.func.date(Sale.date) == datetime.utcnow().date()
     ).scalar() or 0
     
-    return render_template('sales.html', 
+    return render_template('modules/sales/sales.html', 
                          products=products,
                          chatter_activities=chatter_activities,
                          current_date=datetime.utcnow().date(),
                          today_total=today_total,
-                         search_query=search_query)
+                         search_query=search_query,
+                         show_cash_register=True)  
 
 @sales_bp.route('/api/sales', methods=['POST'])
 @login_required
@@ -165,7 +166,7 @@ def api_delete_sale(sale_id):
 def reset_daily_sales():
     try:
         today = datetime.utcnow().date()
-
+        
         # Calcular total del día antes de eliminar
         today_total = db.session.query(db.func.sum(Sale.total)).filter(
             db.func.date(Sale.date) == today
@@ -174,22 +175,24 @@ def reset_daily_sales():
         # Crear registro histórico
         if today_total > 0:
             new_daily_record = DailySales(
-                date=today,
+                date=today.strftime("%Y-%m-%d"),  # Convertir a string
                 total=today_total,
                 user_id=session['user_id']
             )
             db.session.add(new_daily_record)
 
-        # Eliminar ventas del día
+        # SOLUCIÓN: Eliminar ventas del día usando synchronize_session=False
         db.session.query(Sale).filter(
             db.func.date(Sale.date) == today
-        ).delete()
+        ).delete(synchronize_session=False)
 
         # Resetear contadores diarios
-        db.session.query(Product).update({'daily_sales': 0})
+        for product in Product.query.all():
+            product.daily_sales = 0
 
         db.session.commit()
 
+        flash('✅ Contadores y ventas del día reiniciados correctamente. Total registrado: $%.2f' % today_total, 'success')
         return jsonify({
             'success': True,
             'message': 'Contadores y ventas del día reiniciados. Total registrado: $%.2f' % today_total
@@ -197,6 +200,7 @@ def reset_daily_sales():
 
     except Exception as e:
         db.session.rollback()
+        flash(f'❌ Error al reiniciar contadores: {str(e)}', 'danger')
         return jsonify({
             'success': False,
             'message': f'Error al reiniciar: {str(e)}'
@@ -209,7 +213,7 @@ def print_daily_report():
     products_sold = Product.query.filter(Product.daily_sales > 0).all()
     total_sales = sum(p.price * p.daily_sales for p in products_sold)
     
-    return render_template('sales_report.html',
+    return render_template('reports/sales/sales_report.html',
                         products=products_sold,
                         total=total_sales,
                         date=datetime.now().strftime("%d/%m/%Y"))

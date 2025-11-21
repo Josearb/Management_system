@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Inventario{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/reports.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="module-container">
+    <div class="report-header">
+        <h2>📄 Reporte de Inventario - {{ date }}</h2>
+    </div>
+
+    {% if products %}
+    <div class="report-summary">
+        <h3>Resumen del Inventario</h3>
+        <div class="report-totals">
+            <div class="total-card">
+                <div>Total de Productos</div>
+                <div>{{ products|length }}</div>
+            </div>
+            <div class="total-card">
+                <div>Stock Total</div>
+                <div>{{ total_products }}</div>
+            </div>
+            <div class="total-card">
+                <div>Valor Total</div>
+                <div>${{ "%.2f"|format(total_value) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Producto</th>
+                <th>Cantidad en Stock</th>
+                <th>Unidad de Medida</th>
+                <th>Precio Unitario</th>
+                <th>Valor Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.quantity }}</td>
+                <td>{{ product.unit_measure }}</td>
+                <td>${{ "%.2f"|format(product.price) }}</td>
+                <td>${{ "%.2f"|format(product.price * product.quantity) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" style="text-align: right;"><strong>Total de Productos:</strong></td>
+                <td><strong>{{ total_products }}</strong></td>
+                <td style="text-align: right;"><strong>Valor Total del Inventario:</strong></td>
+                <td><strong>${{ "%.2f"|format(total_value) }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📦</div>
+        <h4>No hay productos en el inventario</h4>
+        <p>El inventario se encuentra vacío.</p>
+    </div>
+    {% endif %}
+
+    <div class="report-actions no-print">
+        <button onclick="window.print()" class="btn btn-primary">🖨️ Imprimir</button>
+        <a href="{{ url_for('inventory.download_inventory_pdf') }}" class="btn btn-info">📥 Descargar PDF</a>
+        <a href="{{ url_for('inventory.inventory') }}" class="btn btn-secondary">← Volver a Inventario</a>
+    </div>
+</div>
+{% endblock %}

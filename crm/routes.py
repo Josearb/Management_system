@@ -24,7 +24,7 @@ def crm():
         return redirect(url_for('crm.crm'))
     
     customers = Customer.query.order_by(Customer.name).all()
-    return render_template('crm.html', customers=customers)
+    return render_template('modules/crm/crm.html', customers=customers)
 
 @crm_bp.route('/crm/update/<int:customer_id>', methods=['POST'])
 @login_required
@@ -42,7 +42,7 @@ def update_customer(customer_id):
         flash(f'Error al actualizar cliente: {str(e)}', 'danger')
     return redirect(url_for('crm.crm'))
 
-@crm_bp.route('/crm/delete/<int:customer_id>')
+@crm_bp.route('/crm/delete/<int:customer_id>', methods=['POST'])
 @login_required
 @role_required('admin')
 def delete_customer(customer_id):

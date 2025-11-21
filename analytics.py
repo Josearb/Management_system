@@ -37,8 +37,7 @@ def dashboard():
             'data': amounts
         }
 
-    return render_template(
-        'analytics.html',
+    return render_template('modules/analytics/analytics.html',
         total_sales=total_sales,
         top_products=top_products,
         weekly_data=prepare_chart_data(weekly_sales),

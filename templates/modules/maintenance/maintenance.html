@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Mantenimiento{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modules/maintenance.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="module-container">
+    <h2>🔧 Módulo de Mantenimiento</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="actions">
+        <form action="{{ url_for('maintenance.maintenance') }}" method="post" class="inline-form maintenance-form">
+            <input type="text" name="equipment" placeholder="Equipo" required>
+            <textarea name="description" placeholder="Descripción" required></textarea>
+            <select name="priority" required>
+                <option value="">Prioridad</option>
+                <option value="Alta">Alta</option>
+                <option value="Media">Media</option>
+                <option value="Baja">Baja</option>
+            </select>
+            <input type="text" name="assigned_to" placeholder="Asignado a" required>
+            <input type="date" name="due_date" required>
+            <button type="submit" class="btn btn-primary">➕ Crear Tarea</button>
+        </form>
+    </div>
+    
+    <div class="tasks-grid">
+        {% for task in tasks %}
+        <div class="task-card">
+            <div class="task-header">
+                <div class="task-info">
+                    <h4>{{ task.equipment }}</h4>
+                    <div class="task-meta">
+                        <span class="priority-{{ task.priority|lower }}">{{ task.priority }}</span>
+                        <span class="task-status status-{{ task.status|lower|replace(' ', '-') }}">{{ task.status }}</span>
+                        <span>👤 {{ task.assigned_to }}</span>
+                        <span>📅 {{ task.due_date }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="task-description">
+                {{ task.description }}
+            </div>
+            
+            <div class="task-footer">
+                <div class="task-actions">
+                    <form action="{{ url_for('maintenance.update_task', task_id=task.id) }}" method="post" class="inline-form">
+                        <input type="text" name="equipment" value="{{ task.equipment }}" required>
+                        <textarea name="description" required>{{ task.description }}</textarea>
+                        <select name="priority" required>
+                            <option value="Alta" {% if task.priority == 'Alta' %}selected{% endif %}>Alta</option>
+                            <option value="Media" {% if task.priority == 'Media' %}selected{% endif %}>Media</option>
+                            <option value="Baja" {% if task.priority == 'Baja' %}selected{% endif %}>Baja</option>
+                        </select>
+                        <select name="status" required>
+                            <option value="Pendiente" {% if task.status == 'Pendiente' %}selected{% endif %}>Pendiente</option>
+                            <option value="En progreso" {% if task.status == 'En progreso' %}selected{% endif %}>En progreso</option>
+                            <option value="Completado" {% if task.status == 'Completado' %}selected{% endif %}>Completado</option>
+                        </select>
+                        <input type="text" name="assigned_to" value="{{ task.assigned_to }}" required>
+                        <input type="date" name="due_date" value="{{ task.due_date }}" required>
+                        <button type="submit" class="btn btn-small">✏️ Actualizar</button>
+                    </form>
+                    
+                    {% if task.status != 'Completado' %}
+                    <button type="button" class="btn btn-small btn-success complete-task-btn" 
+                            data-task-id="{{ task.id }}" 
+                            data-task-equipment="{{ task.equipment }}">
+                        ✅ Completar
+                    </button>
+                    {% endif %}
+                    
+                    <button type="button" class="btn btn-small btn-danger delete-task-btn" 
+                            data-task-id="{{ task.id }}" 
+                            data-task-equipment="{{ task.equipment }}">
+                        🗑️ Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal de confirmación personalizado -->
+<div id="confirmModal" class="confirm-modal">
+    <div class="confirm-modal-content">
+        <h3 id="confirmTitle">⚠️ Confirmar Acción</h3>
+        <p id="confirmMessage"></p>
+        <div class="confirm-modal-buttons">
+            <button id="cancelBtn" class="btn btn-secondary">Cancelar</button>
+            <button id="confirmBtn" class="btn btn-danger">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('confirmModal');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+    
+    let actionUrl = '';
+    let currentAction = '';
+
+    // Agregar event listeners a todos los botones de eliminar
+    document.querySelectorAll('.delete-task-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const taskEquipment = this.getAttribute('data-task-equipment');
+            const taskId = this.getAttribute('data-task-id');
+            
+            actionUrl = "{{ url_for('maintenance.delete_task', task_id=0) }}".replace('0', taskId);
+            confirmTitle.textContent = '⚠️ Confirmar Eliminación';
+            confirmMessage.textContent = `¿Está seguro de que desea eliminar la tarea de mantenimiento "${taskEquipment}"?\n\nEsta acción eliminará permanentemente la tarea del sistema.\n\n⚠️ Esta acción no se puede deshacer.`;
+            confirmBtn.textContent = 'Eliminar';
+            confirmBtn.className = 'btn btn-danger';
+            
+            currentAction = 'delete';
+            modal.style.display = 'block';
+        });
+    });
+
+    // Agregar event listeners a todos los botones de completar
+    document.querySelectorAll('.complete-task-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const taskEquipment = this.getAttribute('data-task-equipment');
+            const taskId = this.getAttribute('data-task-id');
+            
+            actionUrl = "{{ url_for('maintenance.complete_task', task_id=0) }}".replace('0', taskId);
+            confirmTitle.textContent = '✅ Confirmar Completado';
+            confirmMessage.textContent = `¿Está seguro de que desea marcar como completada la tarea "${taskEquipment}"?\n\nEsta acción cambiará el estado de la tarea a "Completado".`;
+            confirmBtn.textContent = 'Completar';
+            confirmBtn.className = 'btn btn-success';
+            
+            currentAction = 'complete';
+            modal.style.display = 'block';
+        });
+    });
+
+    // Botón Cancelar
+    cancelBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+        actionUrl = '';
+        currentAction = '';
+    });
+
+    // Botón Confirmar
+    confirmBtn.addEventListener('click', function() {
+        if (actionUrl) {
+            // Crear formulario dinámico para enviar la solicitud POST
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = actionUrl;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+
+    // Cerrar modal haciendo clic fuera del contenido
+    window.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            actionUrl = '';
+            currentAction = '';
+        }
+    });
+
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'block') {
+            modal.style.display = 'none';
+            actionUrl = '';
+            currentAction = '';
+        }
+    });
+});
+</script>
+{% endblock %}

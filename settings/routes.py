@@ -25,7 +25,7 @@ def settings():
     users_count = User.query.count() if session.get('role') == 'admin' else 0
     products_count = Product.query.count() if session.get('role') == 'admin' else 0
     
-    return render_template('settings.html', 
+    return render_template('modules/settings/settings.html', 
                          settings=settings,
                          users_count=users_count,
                          products_count=products_count,

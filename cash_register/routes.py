@@ -39,7 +39,7 @@ def cash_register():
     # GET request - mostrar todos los registros (NO solo los de hoy)
     all_records = CashRegister.query.order_by(CashRegister.date.desc()).all()
     
-    return render_template('cash_register.html', 
+    return render_template('modules/cash_register/cash_register.html', 
                          today_records=all_records)  # Cambiado el nombre para claridad
 
 @cash_register_bp.route('/cash_register/report')
@@ -53,7 +53,7 @@ def print_cash_register_report():
     total_cash = sum(record.cash_amount for record in records)
     grand_total = total_transfer + total_cash
     
-    return render_template('cash_register_report.html',
+    return render_template('reports/cash_register/cash_register_report.html',
                          records=records,
                          total_transfer=total_transfer,
                          total_cash=total_cash,
