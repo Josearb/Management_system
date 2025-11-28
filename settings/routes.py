@@ -9,7 +9,7 @@ import shutil  # Para eliminar archivos de iconos
 settings_bp = Blueprint('settings', __name__)
 
 # Configuración para la subida de archivos
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'webp'}
 UPLOAD_FOLDER = 'static/images/uploads'
 
 def allowed_file(filename):
@@ -66,12 +66,62 @@ def update_settings():
             elif file and file.filename != '':
                 flash('Formato de archivo no permitido', 'danger')
         
+        # NUEVO: Manejar la carga del fondo de pantalla
+        if 'background_file' in request.files:
+            file = request.files['background_file']
+            if file and file.filename != '' and allowed_file(file.filename):
+                # Crear directorio si no existe
+                os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+                
+                # Generar nombre seguro para el archivo
+                filename = secure_filename(file.filename)
+                # Agregar timestamp para evitar conflictos
+                name, ext = os.path.splitext(filename)
+                filename = f"background_{int(datetime.utcnow().timestamp())}{ext}"
+                
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                
+                # Actualizar el nombre del archivo en la base de datos
+                settings.background_filename = f"images/uploads/{filename}"
+                flash('Fondo de pantalla actualizado correctamente', 'success')
+            elif file and file.filename != '':
+                flash('Formato de archivo no permitido para el fondo', 'danger')
+        
         db.session.commit()
         flash('Configuraciones actualizadas correctamente', 'success')
         
     except Exception as e:
         db.session.rollback()
         flash(f'Error al actualizar configuraciones: {str(e)}', 'danger')
+    
+    return redirect(url_for('settings.settings'))
+
+@settings_bp.route('/settings/reset_background', methods=['POST'])
+@login_required
+@role_required('admin')
+def reset_background():
+    try:
+        settings = SystemSettings.get_settings()
+        
+        # Eliminar el archivo de fondo actual si existe
+        if settings.background_filename and settings.background_filename != '':
+            try:
+                background_path = os.path.join('static', settings.background_filename)
+                if os.path.exists(background_path):
+                    os.remove(background_path)
+            except Exception as e:
+                print(f"Error al eliminar archivo de fondo: {e}")
+        
+        # Resetear a valor por defecto (vacío)
+        settings.background_filename = ''
+        db.session.commit()
+        
+        flash('Fondo de pantalla restaurado al valor por defecto', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al restaurar fondo: {str(e)}', 'danger')
     
     return redirect(url_for('settings.settings'))
 
@@ -88,17 +138,18 @@ def reset_factory_settings():
         settings.date_format = 'dd/mm/yyyy'
         settings.language = 'es'
         settings.icon_filename = 'images/icons8-circulacion-de-dinero-100.png'
+        settings.background_filename = ''  # Resetear fondo también
         
-        # Limpiar archivos de iconos subidos (opcional)
+        # Limpiar archivos de iconos y fondos subidos (opcional)
         try:
             # Eliminar todos los archivos en la carpeta de uploads
             if os.path.exists(UPLOAD_FOLDER):
                 for filename in os.listdir(UPLOAD_FOLDER):
                     file_path = os.path.join(UPLOAD_FOLDER, filename)
-                    if os.path.isfile(file_path) and filename.startswith('icon_'):
+                    if os.path.isfile(file_path) and (filename.startswith('icon_') or filename.startswith('background_')):
                         os.remove(file_path)
         except Exception as e:
-            print(f"Error al limpiar archivos de iconos: {e}")
+            print(f"Error al limpiar archivos: {e}")
         
         db.session.commit()
         flash('Configuración restaurada a valores de fábrica correctamente', 'success')

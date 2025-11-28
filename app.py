@@ -11,6 +11,7 @@ from users.routes import users_bp
 from cash_register.routes import cash_register_bp
 from settings.routes import settings_bp
 from analytics import analytics_bp
+from flask_migrate import Migrate  # Nueva importación
 
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta_aqui_12345'
@@ -37,6 +38,11 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 # Initialize Database
 db.init_app(app)
+
+# Configurar Flask-Migrate
+migrate = Migrate(app, db)
+
+# Initialize Database (crear tablas si no existen)
 with app.app_context():
     init_db(app)
 

@@ -7,7 +7,19 @@
 
 {% block content %}
 <div class="module-container">
-    <h2>👥 Gestionar Usuarios</h2>
+    <div class="inventory-header">
+        <h2>Gestión de Usuarios</h2>
+        <div class="header-stats">
+            <div class="stat-card">
+                <div>Total Usuarios</div>
+                <div>{{ users|length }}</div>
+            </div>
+            <div class="stat-card">
+                <div>Roles Activos</div>
+                <div>{{ users_by_role|length }}</div>
+            </div>
+        </div>
+    </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -56,7 +68,7 @@
     
     <!-- Formulario para crear usuario -->
     <div class="action-panel" style="margin-bottom: 2rem;">
-        <h3>➕ Crear Nuevo Usuario</h3>
+        <h3>Crear Nuevo Usuario</h3>
         <form action="{{ url_for('users.users') }}" method="post" class="user-form">
             <div class="form-grid-2">
                 <div class="form-group">
@@ -80,69 +92,105 @@
                 
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">
-                        👤 Crear Usuario
+                        ➕ Crear Usuario
                     </button>
                 </div>
             </div>
         </form>
     </div>
     
-    <!-- Lista de usuarios -->
+    <!-- Vista Tree de Usuarios -->
     <div class="users-section">
         <div class="section-header">
-            <h3>📋 Lista de Usuarios</h3>
+            <h3>Usuarios</h3>
             <div class="export-actions">
-                <span class="text-muted">{{ users|length }} usuario(s) en total</span>
+                <button type="button" id="expandAllBtn" class="btn btn-secondary btn-small">
+                    📂 Expandir Todo
+                </button>
+                <button type="button" id="collapseAllBtn" class="btn btn-secondary btn-small">
+                    📁 Contraer Todo
+                </button>
             </div>
         </div>
 
-        {% if users %}
-        <div class="users-grid">
-            {% for user in users %}
-            <div class="user-card">
-                <div class="user-header">
-                    <div class="user-info">
-                        <h4>{{ user.username }}</h4>
-                        <div class="user-meta">
-                            <span>ID: <strong>{{ user.id }}</strong></span>
-                            <span>Rol: 
-                                <span class="role-badge {{ user.role }}">
-                                    {{ user.role|title }}
-                                </span>
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div class="user-status">
-                        {% if user.id == session['user_id'] %}
-                        <span class="current-user-badge">
-                            👤 Tú
+        {% if users_by_role %}
+        <div class="tree-container">
+            {% for role, role_users in users_by_role.items() %}
+            <div class="tree-node">
+                <div class="tree-header" data-role="{{ role }}">
+                    <div class="role-info">
+                        <span class="role-title">
+                            {% if role == 'admin' %}
+                           Administradores
+                            {% else %}
+                           Dependientes
+                            {% endif %}
                         </span>
-                        {% endif %}
+                        <span class="role-badge {{ role }}">
+                            {{ role|title }}
+                        </span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span class="user-count">{{ role_users|length }} usuario(s)</span>
+                        <span class="toggle-icon">▼</span>
                     </div>
                 </div>
-
-                <div class="user-footer">
-                    <div class="user-actions">
-                        {% if user.id != session['user_id'] %}
-                        <button type="button" class="btn-delete-user delete-user-btn" 
-                                data-user-id="{{ user.id }}" 
-                                data-user-name="{{ user.username }}">
-                            🗑️ Eliminar Usuario
-                        </button>
-                        {% else %}
-                        <span class="text-muted">
-                            No puedes eliminar tu propio usuario
-                        </span>
-                        {% endif %}
+                
+                <div class="tree-content" id="content-{{ role }}">
+                    {% for user in role_users %}
+                    <div class="user-row">
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                {{ user.username[0]|upper }}
+                            </div>
+                            <div class="user-details">
+                                <h4>{{ user.username }}</h4>
+                                <div class="user-meta">
+                                    <span>ID: <strong>{{ user.id }}</strong></span>
+                                    <span>Registrado: <strong>{{ user.id }}</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="user-role">
+                            <span class="role-badge {{ user.role }}">
+                                {{ user.role|title }}
+                            </span>
+                        </div>
+                        
+                        <div class="user-status">
+                            <div class="status-indicator {% if user.id == session['user_id'] %}active{% endif %}"></div>
+                            <span>
+                                {% if user.id == session['user_id'] %}
+                                    Tú mismo
+                                {% else %}
+                                    Activo
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="user-actions">
+                            {% if user.id != session['user_id'] %}
+                            <button type="button" class="btn-delete-user delete-user-btn" 
+                                    data-user-id="{{ user.id }}" 
+                                    data-user-name="{{ user.username }}">
+                                🗑️ Eliminar
+                            </button>
+                            {% else %}
+                            <span class="current-user-badge">
+                                👤 Tu usuario
+                            </span>
+                            {% endif %}
+                        </div>
                     </div>
+                    {% endfor %}
                 </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
         <div class="empty-state-users">
-            <div class="empty-state-users-icon">👥</div>
+            <div class="empty-users-icon">👥</div>
             <h4>
                 {% if search_query %}
                 No se encontraron usuarios para "{{ search_query }}"
@@ -181,6 +229,51 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelBtn = document.getElementById('cancelBtn');
     const confirmBtn = document.getElementById('confirmBtn');
     let deleteUrl = '';
+
+    // Funcionalidad para el árbol
+    const treeHeaders = document.querySelectorAll('.tree-header');
+    const expandAllBtn = document.getElementById('expandAllBtn');
+    const collapseAllBtn = document.getElementById('collapseAllBtn');
+
+    // Alternar visibilidad de secciones
+    treeHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            const role = this.getAttribute('data-role');
+            const content = document.getElementById(`content-${role}`);
+            const toggleIcon = this.querySelector('.toggle-icon');
+            
+            // Alternar clase active
+            this.classList.toggle('active');
+            content.classList.toggle('active');
+            toggleIcon.classList.toggle('rotated');
+        });
+    });
+
+    // Expandir todo
+    expandAllBtn.addEventListener('click', function() {
+        treeHeaders.forEach(header => {
+            const role = header.getAttribute('data-role');
+            const content = document.getElementById(`content-${role}`);
+            const toggleIcon = header.querySelector('.toggle-icon');
+            
+            header.classList.add('active');
+            content.classList.add('active');
+            toggleIcon.classList.add('rotated');
+        });
+    });
+
+    // Contraer todo
+    collapseAllBtn.addEventListener('click', function() {
+        treeHeaders.forEach(header => {
+            const role = header.getAttribute('data-role');
+            const content = document.getElementById(`content-${role}`);
+            const toggleIcon = header.querySelector('.toggle-icon');
+            
+            header.classList.remove('active');
+            content.classList.remove('active');
+            toggleIcon.classList.remove('rotated');
+        });
+    });
 
     // Agregar event listeners a todos los botones de eliminar
     document.querySelectorAll('.delete-user-btn').forEach(button => {
@@ -258,6 +351,11 @@ document.addEventListener('DOMContentLoaded', function() {
             searchForm.style.display = 'none';
         }
     });
+
+    // Auto-expandir la primera sección al cargar
+    if (treeHeaders.length > 0) {
+        treeHeaders[0].click();
+    }
 });
 </script>
 {% endblock %}
